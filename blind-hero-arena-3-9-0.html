@@ -1,0 +1,2710 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Blind Hero Arena</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    background: #000;
+    overflow: hidden;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    touch-action: none;
+  }
+
+  #gameContainer {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    background: #000;
+    overflow: hidden;
+  }
+
+  #arenaCanvas {
+    display: block;
+    background: #000000;
+    touch-action: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  #hud {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #d9a8ff;
+    font-size: 14px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-shadow: 0 0 8px #b026ff, 0 0 16px #b026ff;
+    pointer-events: none;
+    text-align: center;
+    z-index: 5;
+  }
+
+  #hud .title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #e0b3ff;
+    text-shadow: 0 0 10px #c400ff, 0 0 20px #c400ff, 0 0 30px #9900ff;
+  }
+
+  #hud .subtitle {
+    margin-top: 4px;
+    font-size: 11px;
+    color: #b98fff;
+    opacity: 0.8;
+  }
+
+  #zoneDivider {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(176,38,255,0.25), transparent);
+    pointer-events: none;
+    z-index: 4;
+  }
+
+  .zone-label {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(200, 150, 255, 0.35);
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    pointer-events: none;
+    z-index: 4;
+  }
+
+  /* ===================== MENU AWAL ===================== */
+  #startMenu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 50% 30%, #1a0630 0%, #000 75%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    text-align: center;
+  }
+
+  #startMenu .menuTitle {
+    font-size: 30px;
+    font-weight: bold;
+    letter-spacing: 3px;
+    color: #e0b3ff;
+    text-shadow: 0 0 10px #c400ff, 0 0 20px #c400ff, 0 0 30px #9900ff;
+    margin-bottom: 6px;
+  }
+
+  #startMenu .menuSubtitle {
+    font-size: 12px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #b98fff;
+    opacity: 0.8;
+    margin-bottom: 44px;
+  }
+
+  .menuBtn {
+    width: 220px;
+    padding: 16px 0;
+    margin: 10px 0;
+    font-size: 16px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: bold;
+    color: #e0b3ff;
+    background: rgba(176, 38, 255, 0.12);
+    border: 1px solid #b026ff;
+    border-radius: 10px;
+    box-shadow: 0 0 12px rgba(176, 38, 255, 0.45);
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
+  }
+
+  .menuBtn:active {
+    background: rgba(176, 38, 255, 0.32);
+  }
+
+  .menuBtnDisabled {
+    opacity: 0.45;
+    border-style: dashed;
+  }
+
+  .settingRow.rateRow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .rateControl {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin-top: 8px;
+  }
+
+  .rateBtn {
+    width: 48px;
+    height: 48px;
+    font-size: 22px;
+    font-weight: bold;
+    color: #e0b3ff;
+    background: rgba(176, 38, 255, 0.12);
+    border: 1px solid #b026ff;
+    border-radius: 10px;
+    box-shadow: 0 0 12px rgba(176, 38, 255, 0.45);
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
+  }
+
+  .rateBtn:active {
+    background: rgba(176, 38, 255, 0.32);
+  }
+
+  .rateValue {
+    min-width: 64px;
+    font-size: 16px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    color: #e0b3ff;
+  }
+
+  /* ===================== FOKUS SCREEN READER ===================== */
+  .sr-item {
+    outline: none;
+  }
+
+  .sr-item.sr-focused {
+    box-shadow: 0 0 0 3px #ffffff, 0 0 18px 4px #e0b3ff !important;
+    background: rgba(176, 38, 255, 0.4) !important;
+  }
+
+  .visually-hidden {
+    position: absolute !important;
+    width: 1px; height: 1px;
+    margin: -1px; padding: 0; border: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* ===================== MENU MODE & PELATIHAN HERO ===================== */
+  #modeMenu, #heroTrainingScreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 50% 30%, #1a0630 0%, #000 75%);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 102;
+    text-align: center;
+    padding: 24px;
+  }
+
+  #modeMenu .menuTitle, #heroTrainingScreen .menuTitle {
+    font-size: 26px;
+    font-weight: bold;
+    letter-spacing: 3px;
+    color: #e0b3ff;
+    text-shadow: 0 0 10px #c400ff, 0 0 20px #c400ff, 0 0 30px #9900ff;
+    margin-bottom: 6px;
+  }
+
+  #modeMenu .menuSubtitle, #heroTrainingScreen .menuSubtitle {
+    font-size: 12px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #b98fff;
+    opacity: 0.8;
+    margin-bottom: 36px;
+  }
+
+  .heroCard {
+    width: 260px;
+    padding: 18px 20px;
+    margin: 8px 0 22px 0;
+    border: 1px solid #b026ff;
+    border-radius: 12px;
+    background: rgba(176, 38, 255, 0.1);
+    box-shadow: 0 0 12px rgba(176, 38, 255, 0.4);
+    text-align: left;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .heroCard .heroName {
+    font-size: 20px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    color: #e0b3ff;
+    text-shadow: 0 0 8px #c400ff;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+
+  .heroCard .heroSpecRow {
+    font-size: 12.5px;
+    color: #d9c2ff;
+    margin-bottom: 6px;
+    line-height: 1.4;
+  }
+
+  .heroCard .heroSpecRow b {
+    color: #e8c8ff;
+  }
+
+  #settingsPanel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 50% 30%, #1a0630 0%, #000 75%);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 101;
+    text-align: center;
+    padding: 24px;
+  }
+
+  #settingsPanel .menuTitle {
+    font-size: 22px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    color: #e0b3ff;
+    text-shadow: 0 0 10px #c400ff, 0 0 20px #c400ff;
+    margin-bottom: 30px;
+  }
+
+  .settingRow {
+    width: 260px;
+    margin-bottom: 22px;
+    text-align: left;
+  }
+
+  .settingRow label {
+    display: block;
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: #b98fff;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+
+  .settingRow input[type="range"] {
+    width: 100%;
+  }
+
+  #gameContainer {
+    display: none;
+  }
+
+  #pauseGestureZone {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 170px;
+    height: 170px;
+    margin-top: -85px;
+    margin-left: -85px;
+    z-index: 6;
+    background: transparent;
+    touch-action: none;
+  }
+
+  #pauseMenu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(6, 0, 16, 0.92);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    text-align: center;
+    padding: 24px;
+  }
+
+  #pauseMenu .menuTitle {
+    font-size: 24px;
+    font-weight: bold;
+    letter-spacing: 3px;
+    color: #e0b3ff;
+    text-shadow: 0 0 10px #c400ff, 0 0 20px #c400ff, 0 0 30px #9900ff;
+    margin-bottom: 6px;
+  }
+
+  #pauseMenu .menuSubtitle {
+    font-size: 12px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #b98fff;
+    opacity: 0.8;
+    margin-bottom: 36px;
+  }
+
+  /* ===================== HASIL PERTANDINGAN (VS AI) ===================== */
+  #matchResultScreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(6, 0, 16, 0.95);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 210;
+    text-align: center;
+    padding: 24px;
+  }
+
+  #matchResultScreen .menuTitle {
+    font-size: 28px;
+    font-weight: bold;
+    letter-spacing: 3px;
+    color: #e0b3ff;
+    text-shadow: 0 0 10px #c400ff, 0 0 20px #c400ff, 0 0 30px #9900ff;
+    margin-bottom: 6px;
+  }
+
+  #matchResultScreen .menuSubtitle {
+    font-size: 13px;
+    letter-spacing: 1px;
+    text-transform: none;
+    color: #d9c2ff;
+    opacity: 0.9;
+    margin-bottom: 36px;
+  }
+</style>
+</head>
+<body>
+
+<div id="srAnnouncer" class="visually-hidden" aria-live="polite" role="status"></div>
+
+<div id="startMenu">
+  <div class="menuTitle">BLIND HERO ARENA</div>
+  <div class="menuSubtitle">ARENA 1 VS 1</div>
+  <button class="menuBtn sr-item" id="btnMain" aria-label="Main">Main</button>
+  <button class="menuBtn sr-item" id="btnSettings" aria-label="Pengaturan">Pengaturan</button>
+</div>
+
+<div id="modeMenu">
+  <div class="menuTitle">PILIH MODE</div>
+  <div class="menuSubtitle">Mode Permainan</div>
+  <button class="menuBtn sr-item menuBtnDisabled" id="btnMultiplayer" aria-label="Multiplayer, belum tersedia">Multiplayer (Belum Tersedia)</button>
+  <button class="menuBtn sr-item" id="btnVsAi" aria-label="VS AI, bertarung melawan bot komputer, pilih hero terlebih dahulu">VS AI</button>
+  <button class="menuBtn sr-item" id="btnTraining" aria-label="Pelatihan Hero, latihan bersama satu hero">Pelatihan Hero</button>
+  <button class="menuBtn sr-item" id="btnModeBack" aria-label="Kembali ke menu utama">Kembali</button>
+</div>
+
+<div id="heroTrainingScreen">
+  <div class="menuTitle" id="heroSelectTitle">PELATIHAN HERO</div>
+  <div class="menuSubtitle" id="heroSelectSubtitle">2 Hero Tersedia</div>
+  <div class="heroCard sr-item" id="heroRyderCard" role="button" tabindex="0"
+    aria-label="Hero Ryder. HP 100. Skill 1, tembakan tunggal, isi ulang 2 detik. Skill 2, tembakan 5 peluru sambil dash otomatis, isi ulang 5 detik. Dash cepat, jeda 3 detik. Ketuk dua kali untuk memilih dan mulai latihan.">
+    <div class="heroName">RYDER</div>
+    <div class="heroSpecRow"><b>HP:</b> 100</div>
+    <div class="heroSpecRow"><b>Skill 1 &mdash; Tembakan Tunggal:</b> isi ulang 2 detik</div>
+    <div class="heroSpecRow"><b>Skill 2 &mdash; Tembakan 5 Peluru:</b> dash otomatis ke arah bidikan, isi ulang 5 detik</div>
+    <div class="heroSpecRow"><b>Dash:</b> ledakan kecepatan singkat, jeda 3 detik</div>
+    <div class="heroSpecRow"><b>Kontrol:</b> 1 jari untuk gerak, tahan &amp; lepas untuk tembak, tap 2x untuk dash</div>
+  </div>
+  <button class="menuBtn sr-item" id="btnStartTraining" aria-label="Main dengan Ryder, mulai latihan">Main Dengan Ryder</button>
+  <div class="heroCard sr-item" id="heroArjunaCard" role="button" tabindex="0"
+    aria-label="Hero Arjuna. HP 100. Skill 1, tebasan pedang, usap layar atas ke arah yang diinginkan lalu lepas jari untuk menebas, isi ulang 1 detik. Skill 2, panah busur, tap dua jari untuk beralih skill lalu tahan untuk menarik busur dan lepas untuk menembak, isi ulang 3 detik. Ketuk dua kali untuk memilih dan mulai latihan.">
+    <div class="heroName">ARJUNA</div>
+    <div class="heroSpecRow"><b>HP:</b> 100</div>
+    <div class="heroSpecRow"><b>Skill 1 &mdash; Tebasan Pedang:</b> usap layar atas ke arah tebasan, lepas jari untuk menebas, isi ulang 1 detik</div>
+    <div class="heroSpecRow"><b>Skill 2 &mdash; Panah Busur:</b> tahan untuk menarik busur (radius bidik membesar 1 detik), lepas untuk menembak, isi ulang 3 detik</div>
+    <div class="heroSpecRow"><b>Kontrol:</b> 1 jari untuk gerak, tap 2 jari di layar atas untuk ganti skill, tahan &amp; lepas untuk aksi skill aktif</div>
+  </div>
+  <button class="menuBtn sr-item" id="btnStartTrainingArjuna" aria-label="Main dengan Arjuna, mulai latihan">Main Dengan Arjuna</button>
+  <button class="menuBtn sr-item" id="btnTrainingBack" aria-label="Kembali ke pilih mode">Kembali</button>
+</div>
+
+<div id="settingsPanel">
+  <div class="menuTitle">Pengaturan</div>
+  <div class="settingRow">
+    <label for="volFootstep">Volume Langkah Kaki</label>
+    <input type="range" id="volFootstep" min="0" max="100" value="24">
+  </div>
+  <div class="settingRow">
+    <label for="volPistol">Volume Tembakan</label>
+    <input type="range" id="volPistol" min="0" max="100" value="45">
+  </div>
+  <div class="settingRow">
+    <label for="volReload">Volume Reload</label>
+    <input type="range" id="volReload" min="0" max="100" value="38">
+  </div>
+  <div class="settingRow">
+    <label for="volDash">Volume Dash</label>
+    <input type="range" id="volDash" min="0" max="100" value="40">
+  </div>
+  <div class="settingRow rateRow">
+    <label id="srRateLabel">Kecepatan Bicara Screen Reader</label>
+    <div class="rateControl">
+      <button class="rateBtn sr-item" id="btnRateDown" aria-label="Kurangi kecepatan bicara screen reader">&minus;</button>
+      <span class="rateValue" id="srRateValue">145%</span>
+      <button class="rateBtn sr-item" id="btnRateUp" aria-label="Tambah kecepatan bicara screen reader">+</button>
+    </div>
+  </div>
+  <button class="menuBtn sr-item" id="btnSettingsBack" aria-label="Kembali ke menu utama">Kembali</button>
+</div>
+
+<div id="gameContainer">
+  <div id="hud">
+    <div class="subtitle">ARENA 1 VS 1</div>
+  </div>
+  <div id="zoneDivider"></div>
+  <div class="zone-label" id="labelTop">Tahan &amp; Lepas Untuk Tembak</div>
+  <div class="zone-label" id="labelBottom">Gerak &mdash; 1 Jari (Tap 2x = Dash)</div>
+  <canvas id="arenaCanvas"></canvas>
+  <div id="pauseGestureZone" aria-hidden="true"></div>
+</div>
+
+<div id="pauseMenu">
+  <div class="menuTitle">JEDA</div>
+  <div class="menuSubtitle">Menu Permainan</div>
+  <button class="menuBtn sr-item" id="btnResumeGame" aria-label="Lanjut Main">Lanjut Main</button>
+  <button class="menuBtn sr-item" id="btnPauseSettings" aria-label="Pengaturan">Pengaturan</button>
+  <button class="menuBtn sr-item" id="btnPauseExit" aria-label="Kembali ke menu utama">Kembali</button>
+</div>
+
+<div id="matchResultScreen">
+  <div class="menuTitle" id="matchResultTitle">MENANG</div>
+  <div class="menuSubtitle" id="matchResultSubtitle">Bot berhasil dikalahkan.</div>
+  <button class="menuBtn sr-item" id="btnMatchResultBack" aria-label="Kembali ke menu utama">Kembali ke Menu</button>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ==========================================================
+  // KONFIGURASI ARENA (VERTIKAL / PORTRAIT)
+  // ==========================================================
+  const GRID_COLS = 44;   // lebar arena dalam grid (diperkecil sedikit dari revisi sebelumnya)
+  const GRID_ROWS = 64;   // tinggi arena dalam grid (diperkecil sedikit, tetap vertikal)
+
+  const ARENA_COLOR = '#000000';
+  const BORDER_COLOR = '#b026ff';
+  const BORDER_GLOW_COLOR = 'rgba(176, 38, 255, 0.55)';
+  const BORDER_WIDTH_GRID = 0.5;
+
+  let PLAYER_COLOR = '#ff1a3d';
+  let PLAYER_GLOW_COLOR = 'rgba(255, 26, 61, 0.65)';
+  let PLAYER_DASH_TRAIL_COLOR = 'rgba(255, 26, 61, 0.25)';
+  const PLAYER_RADIUS_GRID = 1.2; // diperbesar agar badan hero tidak terlalu kecil (sebelumnya 0.8)
+  const PLAYER_SPEED_GRID_PER_SEC = 3; // kecepatan gerak dalam satuan grid/detik (dinaikkan agar tidak terlalu lambat)
+
+  // Warna khas tiap hero, diterapkan saat memulai permainan (lihat applyHeroVisuals)
+  const HERO_VISUALS = {
+    ryder: {
+      color: '#ff1a3d',
+      glow: 'rgba(255, 26, 61, 0.65)',
+      dashTrail: 'rgba(255, 26, 61, 0.25)'
+    },
+    arjuna: {
+      color: '#ffb347',
+      glow: 'rgba(255, 179, 71, 0.65)',
+      dashTrail: 'rgba(255, 179, 71, 0.25)'
+    }
+  };
+
+  const BULLET_COLOR = '#e0b3ff';
+  const BULLET_GLOW_COLOR = 'rgba(224, 179, 255, 0.9)';
+  const BULLET_RADIUS_GRID = 0.28;
+  const BULLET_SPEED_GRID_PER_SEC = 26;
+
+  const SHOOT_RANGE_GRID = 13; // radius jangkauan tembak di sekitar pemain (juga batas jarak peluru)
+
+  const CAMERA_ZOOM = 2.15; // tingkat zoom kamera, selalu berfokus di tengah pemain (diperdekat sedikit)
+
+  const RELOAD_TIME_MS = 2000; // durasi reload skill 1 setelah 1 peluru ditembakkan
+
+  const SKILL2_RELOAD_TIME_MS = 5000; // durasi reload skill 2
+  const SKILL2_BULLET_COUNT = 5; // jumlah peluru sekali tembak untuk skill 2
+  const SKILL2_RANGE_GRID = SHOOT_RANGE_GRID * 1.2; // radius jangkauan skill 2 (diperluas 20%)
+  const SKILL2_BULLET_SPACING_GRID = 1.4; // jarak antar peluru dalam satu garis lurus skill 2
+
+  // ==========================================================
+  // KONFIGURASI SKILL ARJUNA (PEDANG & PANAH)
+  // ==========================================================
+  const ARJUNA_SKILL1_RELOAD_MS = 1000; // isi ulang skill 1 (tebasan pedang) = 1 detik
+  const ARJUNA_SLASH_RANGE_GRID = 9; // radius lingkaran jangkauan tebasan pedang (diperbesar lagi dari 6.5)
+  const ARJUNA_SLASH_EFFECT_DURATION_MS = 220; // lama efek visual tebasan ditampilkan
+
+  const ARJUNA_SKILL2_RELOAD_MS = 3000; // isi ulang skill 2 (panah) = 3 detik
+  const ARJUNA_BOW_DRAW_MS = 1000; // lama menarik busur sampai radius bidik maksimum (1 detik)
+  const ARJUNA_BOW_BASE_RANGE_GRID = 9; // radius bidik saat mulai menarik busur
+  const ARJUNA_BOW_MAX_RANGE_GRID = 15; // radius bidik maksimum setelah busur ditarik penuh
+  const ARJUNA_ARROW_SPEED_GRID_PER_SEC = 30; // kecepatan panah, sedikit lebih cepat dari peluru
+
+  const HP_BAR_COLOR = '#2ee65f'; // warna hijau bar HP
+
+  const DASH_SPEED_GRID_PER_SEC = 24; // kecepatan saat dash
+  const DASH_DURATION_MS = 160; // lama durasi dash berlangsung
+  const DASH_COOLDOWN_MS = 3000; // jeda sebelum dash bisa dipakai lagi
+  const DOUBLE_TAP_WINDOW_MS = 300; // jeda maksimum antar tap untuk dianggap tap ganda (dash)
+
+  const canvas = document.getElementById('arenaCanvas');
+  const ctx = canvas.getContext('2d');
+  const gameContainer = document.getElementById('gameContainer');
+  const zoneDivider = document.getElementById('zoneDivider');
+  const labelTop = document.getElementById('labelTop');
+  const labelBottom = document.getElementById('labelBottom');
+
+  // Layer arena di-cache ke canvas terpisah (offscreen) supaya efek glow/shadow
+  // berat tidak perlu dihitung ulang tiap frame -> mencegah lag/patah-patah.
+  const arenaLayer = document.createElement('canvas');
+  const arenaLayerCtx = arenaLayer.getContext('2d');
+  let arenaLayerW = 0, arenaLayerH = 0;
+
+  let dpr = window.devicePixelRatio || 1;
+  let viewW = 0, viewH = 0;
+  let cellSize = 20;
+  let arenaCx = 0, arenaCy = 0, arenaRx = 0, arenaRy = 0, innerRx = 0, innerRy = 0;
+  let screenMidY = 0; // pembagi layar atas/bawah untuk kontrol
+  let minimapSize = 110;
+  let minimapPad = 14;
+
+  // ==========================================================
+  // STATE SENJATA (RELOAD PER-SKILL)
+  // ==========================================================
+  let currentSkill = 1; // 1 = skill utama (tembakan tunggal / tebasan pedang), 2 = skill kedua (5 peluru / panah busur)
+  const skillReloading = { 1: false, 2: false };
+  const skillReloadStart = { 1: 0, 2: 0 };
+  let SKILL_RELOAD_MS = { 1: RELOAD_TIME_MS, 2: SKILL2_RELOAD_TIME_MS }; // diganti sesuai hero yang dipilih, lihat applyHeroVisuals
+
+  // Menerapkan warna & durasi isi ulang skill sesuai hero yang dipilih pemain
+  function applyHeroVisuals() {
+    const visuals = HERO_VISUALS[selectedHero] || HERO_VISUALS.ryder;
+    PLAYER_COLOR = visuals.color;
+    PLAYER_GLOW_COLOR = visuals.glow;
+    PLAYER_DASH_TRAIL_COLOR = visuals.dashTrail;
+    SKILL_RELOAD_MS = selectedHero === 'arjuna'
+      ? { 1: ARJUNA_SKILL1_RELOAD_MS, 2: ARJUNA_SKILL2_RELOAD_MS }
+      : { 1: RELOAD_TIME_MS, 2: SKILL2_RELOAD_TIME_MS };
+  }
+
+  // Menerapkan warna & durasi isi ulang skill sesuai hero yang dipilih secara acak untuk bot
+  function applyBotVisuals() {
+    const visuals = HERO_VISUALS[bot.hero] || HERO_VISUALS.ryder;
+    bot.color = visuals.color;
+    bot.glow = visuals.glow;
+    bot.dashTrail = visuals.dashTrail;
+    bot.skillReloadMs = bot.hero === 'arjuna'
+      ? { 1: ARJUNA_SKILL1_RELOAD_MS, 2: ARJUNA_SKILL2_RELOAD_MS }
+      : { 1: RELOAD_TIME_MS, 2: SKILL2_RELOAD_TIME_MS };
+  }
+
+  // ==========================================================
+  // STATE PEMAIN
+  // ==========================================================
+  const player = {
+    x: 0,
+    y: 0,
+    radius: 0,
+    facingX: 0,
+    facingY: -1,
+    hp: 100,
+    maxHp: 100,
+    hitFlashUntil: 0
+  };
+
+  let selectedHero = 'ryder'; // 'ryder' atau 'arjuna' — ditentukan saat memilih hero di menu pelatihan
+  let aimHoldStartTime = null; // waktu mulai menarik busur Arjuna yang sah (null = belum/tidak boleh menarik)
+  let slashEffect = null; // efek visual tebasan pedang Arjuna: {x, y, dirX, dirY, startTime}
+
+  const bullets = [];
+
+  // ==========================================================
+  // KONFIGURASI DAMAGE (dipakai untuk mode VS AI)
+  // ==========================================================
+  const DMG_RYDER_SKILL1 = 10;
+  const DMG_RYDER_SKILL2_BULLET = 6; // per peluru, total maksimum 5 peluru
+  const DMG_ARJUNA_SLASH = 18;
+  const DMG_ARJUNA_ARROW = 20;
+
+  // ==========================================================
+  // STATE BOT (LAWAN PADA MODE VS AI)
+  // ==========================================================
+  const bot = {
+    x: 0,
+    y: 0,
+    radius: 0,
+    facingX: 0,
+    facingY: -1,
+    hp: 100,
+    maxHp: 100,
+    hero: 'ryder', // dipilih acak saat pertandingan VS AI dimulai
+    color: '#ff1a3d',
+    glow: 'rgba(255, 26, 61, 0.65)',
+    dashTrail: 'rgba(255, 26, 61, 0.25)',
+    currentSkill: 1,
+    skillReloading: { 1: false, 2: false },
+    skillReloadStart: { 1: 0, 2: 0 },
+    skillReloadMs: { 1: RELOAD_TIME_MS, 2: SKILL2_RELOAD_TIME_MS },
+    pendingSkill2Revert: false,
+    dashActive: false,
+    dashDirX: 0,
+    dashDirY: 0,
+    dashElapsedMs: 0,
+    dashOnCooldown: false,
+    dashCooldownStart: 0,
+    moveDirX: 0,
+    moveDirY: 0,
+    strafeDir: 1,
+    nextDecisionAt: 0,
+    nextStrafeFlipAt: 0,
+    hitFlashUntil: 0,
+    active: false // true hanya selama mode VS AI berlangsung
+  };
+  let botSlashEffect = null; // efek visual tebasan pedang bot: {x, y, dirX, dirY, startTime}
+  let matchOver = false; // true saat salah satu pihak (pemain/bot) kalah di mode VS AI
+
+  // Kesulitan bot: "sedang" — tidak sempurna dalam gerak & bidikan, ada jeda reaksi
+  const BOT_SPEED_FACTOR = 0.88; // sedikit lebih lambat dari pemain
+  const BOT_DECISION_INTERVAL_MIN_MS = 320;
+  const BOT_DECISION_INTERVAL_MAX_MS = 620;
+  const BOT_AIM_JITTER_RAD = 0.30; // bidikan bot tidak selalu presisi (± ~17 derajat)
+  const BOT_ATTACK_CHANCE = 0.6; // peluang bot mengambil kesempatan menyerang
+
+  // ==========================================================
+  // STATE DASH
+  // ==========================================================
+  let dashActive = false;
+  let dashDirX = 0, dashDirY = 0;
+  let dashElapsedMs = 0;
+  let dashOnCooldown = false;
+  let dashCooldownStart = 0;
+  let lastMoveDirX = 0, lastMoveDirY = -1;
+  let lastBottomTapEndTime = -9999;
+  let pendingSkill2Revert = false; // true jika sedang dash otomatis dari skill 2, tunggu selesai baru ganti ke skill 1
+
+  // ==========================================================
+  // EFEK SUARA (SFX)
+  // ==========================================================
+  const sfxFootstep = new Audio('jalan.mp3');
+  sfxFootstep.loop = true;
+  sfxFootstep.volume = 0.24;
+  sfxFootstep.playbackRate = 2.3; // dipercepat lagi supaya terasa seperti berlari
+
+  const sfxPistol = new Audio('pistol ryder.mp3');
+  sfxPistol.volume = 0.45;
+
+  const sfxReload = new Audio('reload ryder.mp3');
+  sfxReload.volume = 0.38;
+
+  const sfxDash = new Audio('dash.mp3');
+  sfxDash.volume = 0.4;
+
+  const sfxSwordArjuna = new Audio('pedang arjuna.mp3');
+  sfxSwordArjuna.volume = 0.5;
+
+  const sfxBowDrawArjuna = new Audio('panah arjuna 1.mp3');
+  sfxBowDrawArjuna.volume = 0.4;
+
+  const sfxArrowShotArjuna = new Audio('panah arjuna 2.mp3');
+  sfxArrowShotArjuna.volume = 0.45;
+
+  // suara langkah kaki khusus bot, diputar terpisah dari milik pemain agar
+  // arahnya bisa diproses secara spasial (audio 3D) relatif terhadap pemain
+  const sfxFootstepBot = new Audio('jalan.mp3');
+  sfxFootstepBot.loop = true;
+  sfxFootstepBot.playbackRate = 2.3;
+
+  // memutar salinan baru dari sebuah efek suara agar bisa tumpang tindih
+  // (misalnya beberapa bunyi tembakan beruntun tanpa saling memotong)
+  function playSfx(baseAudio) {
+    try {
+      const inst = baseAudio.cloneNode();
+      inst.volume = baseAudio.volume;
+      inst.play().catch(function () {});
+    } catch (e) {}
+  }
+
+  let footstepPlaying = false;
+  function updateFootstepAudio() {
+    const isMoving = dashActive || (moveActive && moveMag > 0);
+    if (isMoving && !footstepPlaying) {
+      try {
+        sfxFootstep.currentTime = 0;
+        sfxFootstep.play().catch(function () {});
+      } catch (e) {}
+      footstepPlaying = true;
+    } else if (!isMoving && footstepPlaying) {
+      sfxFootstep.pause();
+      footstepPlaying = false;
+    }
+  }
+
+  // ==========================================================
+  // AUDIO 3D (SPASIAL) — supaya pemain bisa mendengar posisi bot
+  // Menggunakan Web Audio API: panning kiri/kanan sesuai posisi relatif,
+  // pelemahan volume berdasarkan jarak, dan filter low-pass yang meredam
+  // suara saat sumbernya berada di BELAKANG arah hadap pemain (facing),
+  // sehingga ada perbedaan jelas antara suara di depan (jernih) dan di
+  // belakang (teredam & lebih pelan).
+  // ==========================================================
+  let audioCtx = null;
+  function ensureAudioCtx() {
+    if (!audioCtx) {
+      try {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      } catch (e) {
+        audioCtx = null;
+      }
+    }
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume().catch(function () {});
+    }
+    return audioCtx;
+  }
+  document.addEventListener('touchstart', ensureAudioCtx, { once: true, passive: true });
+
+  // Menghitung parameter spasial (pan, gain, frekuensi low-pass) dari suatu
+  // sumber suara pada posisi (srcX, srcY) relatif terhadap pemain sebagai pendengar.
+  function computeSpatialParams(srcX, srcY) {
+    const dx = srcX - player.x;
+    const dy = srcY - player.y;
+    const dist = Math.hypot(dx, dy);
+
+    let fx = player.facingX, fy = player.facingY;
+    const fLen = Math.hypot(fx, fy) || 1;
+    fx /= fLen; fy /= fLen;
+    const rx = -fy, ry = fx; // sumbu "kanan" pemain, tegak lurus arah hadap
+
+    const forwardDot = dist > 0.001 ? (dx * fx + dy * fy) / dist : 1; // 1 = di depan, -1 = di belakang
+    const rightDot = dist > 0.001 ? (dx * rx + dy * ry) / dist : 0;
+
+    const maxHearDistPx = SHOOT_RANGE_GRID * 2.4 * cellSize;
+    const distAtten = Math.max(0, 1 - dist / Math.max(1, maxHearDistPx));
+
+    const behindFactor = Math.max(0, -forwardDot); // 0 di depan penuh -> 1 tepat di belakang
+    const gain = Math.max(0, distAtten * (1 - behindFactor * 0.55));
+    const lowpassFreq = Math.max(500, 22000 - behindFactor * 17000);
+
+    return {
+      pan: Math.max(-1, Math.min(1, rightDot)),
+      gain: gain,
+      lowpassFreq: lowpassFreq
+    };
+  }
+
+  // Memutar efek suara milik BOT dengan pemrosesan spasial (posisi bot saat ini)
+  function playBotSfx(baseAudio, source) {
+    try {
+      const ctxA = ensureAudioCtx();
+      const inst = baseAudio.cloneNode();
+      if (!ctxA) {
+        inst.volume = baseAudio.volume;
+        inst.play().catch(function () {});
+        return;
+      }
+      const params = computeSpatialParams(source.x, source.y);
+      const srcNode = ctxA.createMediaElementSource(inst);
+      const filter = ctxA.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = params.lowpassFreq;
+      const panner = ctxA.createStereoPanner();
+      panner.pan.value = params.pan;
+      const gainNode = ctxA.createGain();
+      gainNode.gain.value = baseAudio.volume * params.gain;
+      srcNode.connect(filter).connect(panner).connect(gainNode).connect(ctxA.destination);
+      inst.play().catch(function () {});
+    } catch (e) {
+      try { playSfx(baseAudio); } catch (e2) {}
+    }
+  }
+
+  // Graf audio langkah kaki bot dibangun sekali lalu diperbarui tiap frame
+  // (pan/gain/filter) supaya posisinya terasa bergerak secara real-time.
+  let botFootstepNodes = null;
+  function ensureBotFootstepGraph() {
+    if (botFootstepNodes) return botFootstepNodes;
+    const ctxA = ensureAudioCtx();
+    if (!ctxA) return null;
+    try {
+      const srcNode = ctxA.createMediaElementSource(sfxFootstepBot);
+      const filter = ctxA.createBiquadFilter();
+      filter.type = 'lowpass';
+      const panner = ctxA.createStereoPanner();
+      const gainNode = ctxA.createGain();
+      srcNode.connect(filter).connect(panner).connect(gainNode).connect(ctxA.destination);
+      botFootstepNodes = { filter: filter, panner: panner, gain: gainNode };
+    } catch (e) {
+      botFootstepNodes = null;
+    }
+    return botFootstepNodes;
+  }
+
+  let botFootstepPlaying = false;
+  function updateBotFootstepAudio() {
+    if (!bot.active) {
+      if (botFootstepPlaying) {
+        sfxFootstepBot.pause();
+        botFootstepPlaying = false;
+      }
+      return;
+    }
+    const moving = bot.dashActive || Math.hypot(bot.moveDirX, bot.moveDirY) > 0.05;
+    const nodes = ensureBotFootstepGraph();
+    if (moving && !botFootstepPlaying) {
+      try {
+        sfxFootstepBot.currentTime = 0;
+        sfxFootstepBot.play().catch(function () {});
+      } catch (e) {}
+      botFootstepPlaying = true;
+    } else if (!moving && botFootstepPlaying) {
+      sfxFootstepBot.pause();
+      botFootstepPlaying = false;
+    }
+    if (nodes) {
+      const params = computeSpatialParams(bot.x, bot.y);
+      nodes.panner.pan.value = params.pan;
+      nodes.filter.frequency.value = params.lowpassFreq;
+      nodes.gain.gain.value = (volFootstep ? volFootstep.value / 100 : 0.24) * params.gain;
+    }
+  }
+
+  // ==========================================================
+  // RESIZE & SETUP CANVAS (full screen, arena vertikal di tengah)
+  // ==========================================================
+  function resizeCanvas() {
+    dpr = window.devicePixelRatio || 1;
+    viewW = window.innerWidth;
+    viewH = window.innerHeight;
+
+    canvas.style.width = viewW + 'px';
+    canvas.style.height = viewH + 'px';
+    canvas.width = viewW * dpr;
+    canvas.height = viewH * dpr;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(dpr, dpr);
+
+    const paddingW = viewW * 0.06;
+    const paddingH = viewH * 0.14;
+    const cellByWidth = (viewW - paddingW) / GRID_COLS;
+    const cellByHeight = (viewH - paddingH) / GRID_ROWS;
+    cellSize = Math.max(4, Math.floor(Math.min(cellByWidth, cellByHeight)));
+
+    const arenaWidthPx = cellSize * GRID_COLS;
+    const arenaHeightPx = cellSize * GRID_ROWS;
+
+    arenaCx = viewW / 2;
+    arenaCy = viewH / 2;
+
+    const borderThicknessPx = BORDER_WIDTH_GRID * cellSize;
+    arenaRx = arenaWidthPx / 2 - borderThicknessPx / 2;
+    arenaRy = arenaHeightPx / 2 - borderThicknessPx / 2;
+    innerRx = arenaRx - borderThicknessPx / 2;
+    innerRy = arenaRy - borderThicknessPx / 2;
+
+    screenMidY = viewH / 2;
+    zoneDivider.style.top = screenMidY + 'px';
+    labelTop.style.top = '18%';
+    labelBottom.style.bottom = '10%';
+
+    minimapSize = Math.max(80, Math.min(140, viewW * 0.26));
+    minimapPad = Math.max(10, viewW * 0.03);
+
+    rebuildArenaLayer();
+
+    if (player.radius === 0) {
+      player.x = arenaCx;
+      player.y = arenaCy;
+    }
+    player.radius = PLAYER_RADIUS_GRID * cellSize;
+
+    clampPlayerToArena();
+  }
+
+  function resetGameState() {
+    applyHeroVisuals();
+    player.hp = player.maxHp;
+    player.x = arenaCx;
+    player.y = arenaCy;
+    player.hitFlashUntil = 0;
+    bullets.length = 0;
+    dashActive = false;
+    dashOnCooldown = false;
+    currentSkill = 1;
+    skillReloading[1] = false;
+    skillReloading[2] = false;
+    pendingSkill2Revert = false;
+    slashEffect = null;
+    aiming = false;
+    aimTouchId = null;
+    aimHoldStartTime = null;
+    matchOver = false;
+    bot.active = false;
+    bot.hp = bot.maxHp;
+    bot.dashActive = false;
+    bot.pendingSkill2Revert = false;
+    botSlashEffect = null;
+    if (footstepPlaying) {
+      sfxFootstep.pause();
+      footstepPlaying = false;
+    }
+    if (botFootstepPlaying) {
+      sfxFootstepBot.pause();
+      botFootstepPlaying = false;
+    }
+  }
+
+  function clampEntityToArena(entity) {
+    const dx = entity.x - arenaCx;
+    const dy = entity.y - arenaCy;
+    const rx = Math.max(1, innerRx - entity.radius);
+    const ry = Math.max(1, innerRy - entity.radius);
+    const norm = (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry);
+    if (norm > 1) {
+      const scale = 1 / Math.sqrt(norm);
+      entity.x = arenaCx + dx * scale;
+      entity.y = arenaCy + dy * scale;
+    }
+  }
+
+  function clampPlayerToArena() {
+    clampEntityToArena(player);
+  }
+
+  // ==========================================================
+  // CACHE LAYER ARENA (dibangun sekali saat resize, bukan tiap frame)
+  // ==========================================================
+  function rebuildArenaLayer() {
+    const borderThicknessPx = BORDER_WIDTH_GRID * cellSize;
+    const margin = borderThicknessPx * 6; // ruang ekstra untuk bleed efek glow
+
+    arenaLayerW = arenaRx * 2 + margin * 2;
+    arenaLayerH = arenaRy * 2 + margin * 2;
+
+    const renderScale = Math.max(1, dpr) * CAMERA_ZOOM; // tetap tajam meski di-zoom kamera
+    arenaLayer.width = Math.max(1, Math.round(arenaLayerW * renderScale));
+    arenaLayer.height = Math.max(1, Math.round(arenaLayerH * renderScale));
+    arenaLayerCtx.setTransform(1, 0, 0, 1, 0, 0);
+    arenaLayerCtx.scale(renderScale, renderScale);
+    arenaLayerCtx.clearRect(0, 0, arenaLayerW, arenaLayerH);
+
+    const lcx = arenaLayerW / 2;
+    const lcy = arenaLayerH / 2;
+
+    arenaLayerCtx.save();
+    arenaLayerCtx.beginPath();
+    arenaLayerCtx.ellipse(lcx, lcy, arenaRx, arenaRy, 0, 0, Math.PI * 2);
+    arenaLayerCtx.lineWidth = borderThicknessPx;
+    arenaLayerCtx.strokeStyle = BORDER_COLOR;
+    arenaLayerCtx.shadowColor = BORDER_GLOW_COLOR;
+    arenaLayerCtx.shadowBlur = borderThicknessPx * 2.2;
+    arenaLayerCtx.stroke();
+
+    arenaLayerCtx.shadowBlur = borderThicknessPx * 4;
+    arenaLayerCtx.lineWidth = borderThicknessPx * 0.5;
+    arenaLayerCtx.stroke();
+    arenaLayerCtx.restore();
+
+    arenaLayerCtx.save();
+    arenaLayerCtx.beginPath();
+    arenaLayerCtx.ellipse(lcx, lcy, innerRx, innerRy, 0, 0, Math.PI * 2);
+    arenaLayerCtx.fillStyle = ARENA_COLOR;
+    arenaLayerCtx.fill();
+    arenaLayerCtx.restore();
+
+    // garis tengah horizontal tipis sebagai penanda pembagi 1 vs 1
+    arenaLayerCtx.save();
+    arenaLayerCtx.beginPath();
+    arenaLayerCtx.setLineDash([cellSize * 0.4, cellSize * 0.4]);
+    arenaLayerCtx.moveTo(lcx - innerRx, lcy);
+    arenaLayerCtx.lineTo(lcx + innerRx, lcy);
+    arenaLayerCtx.strokeStyle = 'rgba(176, 38, 255, 0.3)';
+    arenaLayerCtx.lineWidth = Math.max(1, cellSize * 0.05);
+    arenaLayerCtx.stroke();
+    arenaLayerCtx.restore();
+  }
+
+  // ==========================================================
+  // GAMBAR ARENA OVAL (VERTIKAL) — tempel hasil cache, ringan tiap frame
+  // ==========================================================
+  function drawArena() {
+    ctx.drawImage(
+      arenaLayer,
+      arenaCx - arenaLayerW / 2,
+      arenaCy - arenaLayerH / 2,
+      arenaLayerW,
+      arenaLayerH
+    );
+  }
+
+  // ==========================================================
+  // RADIUS JARAK TEMBAK (lingkaran di sekitar pemain)
+  // ==========================================================
+  // Menghitung radius lingkaran jangkauan skill aktif saat ini (grid unit),
+  // memperhitungkan busur Arjuna yang membesar selama ditarik.
+  // Busur tidak bisa ditarik (radius tidak membesar) selama skill 2 masih cooldown.
+  function isBowDrawActive() {
+    return aiming && aimHoldStartTime !== null && !(selectedHero === 'arjuna' && currentSkill === 2 && skillReloading[2]);
+  }
+
+  function getCurrentRangeGrid() {
+    if (selectedHero === 'arjuna') {
+      if (currentSkill === 1) return ARJUNA_SLASH_RANGE_GRID;
+      if (isBowDrawActive()) {
+        const elapsed = performance.now() - aimHoldStartTime;
+        const t = Math.min(1, elapsed / ARJUNA_BOW_DRAW_MS);
+        return ARJUNA_BOW_BASE_RANGE_GRID + (ARJUNA_BOW_MAX_RANGE_GRID - ARJUNA_BOW_BASE_RANGE_GRID) * t;
+      }
+      return ARJUNA_BOW_BASE_RANGE_GRID;
+    }
+    return currentSkill === 2 ? SKILL2_RANGE_GRID : SHOOT_RANGE_GRID;
+  }
+
+  function drawShootRange() {
+    const rangePx = getCurrentRangeGrid() * cellSize;
+    const bowLocked = selectedHero === 'arjuna' && currentSkill === 2 && skillReloading[2];
+    ctx.save();
+    ctx.beginPath();
+    ctx.setLineDash([cellSize * 0.25, cellSize * 0.3]);
+    ctx.arc(player.x, player.y, rangePx, 0, Math.PI * 2);
+    ctx.strokeStyle = (aiming && !bowLocked) ? 'rgba(224, 179, 255, 0.55)' : 'rgba(176, 38, 255, 0.25)';
+    ctx.lineWidth = Math.max(1, cellSize * 0.05);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // ==========================================================
+  // MINIMAP (PETA ARENA, POJOK KIRI ATAS, RUANG LAYAR)
+  // ==========================================================
+  function drawMinimap() {
+    const boxX = minimapPad;
+    const boxY = minimapPad;
+
+    ctx.save();
+    // latar kotak minimap
+    ctx.fillStyle = 'rgba(10, 0, 20, 0.65)';
+    ctx.fillRect(boxX, boxY, minimapSize, minimapSize);
+    ctx.strokeStyle = 'rgba(176, 38, 255, 0.7)';
+    ctx.lineWidth = 2;
+    ctx.shadowColor = 'rgba(176, 38, 255, 0.5)';
+    ctx.shadowBlur = 6;
+    ctx.strokeRect(boxX, boxY, minimapSize, minimapSize);
+    ctx.restore();
+
+    const mapCx = boxX + minimapSize / 2;
+    const mapCy = boxY + minimapSize / 2;
+    const innerSize = minimapSize - 12;
+    const scaleMap = innerSize / (2 * Math.max(arenaRx, arenaRy));
+
+    // bentuk oval arena diperkecil
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(mapCx, mapCy, arenaRx * scaleMap, arenaRy * scaleMap, 0, 0, Math.PI * 2);
+    ctx.strokeStyle = BORDER_COLOR;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
+
+    // posisi pemain di minimap
+    const pMapX = mapCx + (player.x - arenaCx) * scaleMap;
+    const pMapY = mapCy + (player.y - arenaCy) * scaleMap;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(pMapX, pMapY, 4, 0, Math.PI * 2);
+    ctx.fillStyle = PLAYER_COLOR;
+    ctx.shadowColor = PLAYER_GLOW_COLOR;
+    ctx.shadowBlur = 6;
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // ==========================================================
+  // GAMBAR PEMAIN (LINGKARAN MERAH)
+  // ==========================================================
+  function drawPlayer() {
+    if (dashActive) {
+      // efek cahaya tambahan (jejak sinar tipis) saat pemain sedang ngedash
+      ctx.save();
+      const glowRadius = player.radius * 2.4;
+      const trailX = player.x - dashDirX * player.radius * 1.8;
+      const trailY = player.y - dashDirY * player.radius * 1.8;
+      const dashGlow = ctx.createRadialGradient(trailX, trailY, 0, trailX, trailY, glowRadius);
+      dashGlow.addColorStop(0, 'rgba(255, 255, 255, 0.5)');
+      dashGlow.addColorStop(0.5, PLAYER_DASH_TRAIL_COLOR);
+      dashGlow.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      ctx.beginPath();
+      ctx.arc(trailX, trailY, glowRadius, 0, Math.PI * 2);
+      ctx.fillStyle = dashGlow;
+      ctx.fill();
+      ctx.restore();
+    }
+
+    const playerFlashing = player.hitFlashUntil && performance.now() < player.hitFlashUntil;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+    ctx.fillStyle = playerFlashing ? '#ffffff' : PLAYER_COLOR;
+    ctx.shadowColor = PLAYER_GLOW_COLOR;
+    ctx.shadowBlur = dashActive ? player.radius * 2.2 : player.radius * 1.4;
+    ctx.fill();
+    ctx.restore();
+
+    // penanda arah hadap pemain
+    ctx.save();
+    const tipX = player.x + player.facingX * player.radius * 1.6;
+    const tipY = player.y + player.facingY * player.radius * 1.6;
+    ctx.beginPath();
+    ctx.moveTo(player.x, player.y);
+    ctx.lineTo(tipX, tipY);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)';
+    ctx.lineWidth = Math.max(1, player.radius * 0.18);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // ==========================================================
+  // BAR HP PEMAIN (DI ATAS LINGKARAN PEMAIN, IKUT DUNIA/KAMERA)
+  // ==========================================================
+  function drawPlayerHpBar() {
+    const barW = player.radius * 2.6;
+    const barH = Math.max(3, player.radius * 0.3);
+    const barX = player.x - barW / 2;
+    const barY = player.y - player.radius - barH - Math.max(5, player.radius * 0.4);
+    const pct = Math.max(0, Math.min(1, player.hp / player.maxHp));
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+    ctx.fillRect(barX - 1, barY - 1, barW + 2, barH + 2);
+    ctx.strokeStyle = 'rgba(176, 38, 255, 0.5)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(barX - 1, barY - 1, barW + 2, barH + 2);
+
+    ctx.fillStyle = HP_BAR_COLOR;
+    ctx.shadowColor = 'rgba(46, 230, 95, 0.6)';
+    ctx.shadowBlur = 4;
+    ctx.fillRect(barX, barY, barW * pct, barH);
+    ctx.restore();
+
+    // teks persentase HP di atas bar
+    ctx.save();
+    ctx.font = `600 ${Math.max(8, player.radius * 0.55)}px Segoe UI, Arial, sans-serif`;
+    ctx.fillStyle = HP_BAR_COLOR;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.shadowColor = 'rgba(46, 230, 95, 0.5)';
+    ctx.shadowBlur = 3;
+    ctx.fillText(Math.round(pct * 100) + '%', player.x, barY - 2);
+    ctx.restore();
+  }
+
+  // ==========================================================
+  // GAMBAR BOT (LAWAN, MODE VS AI)
+  // ==========================================================
+  function drawBot() {
+    if (!bot.active) return;
+    if (bot.dashActive) {
+      ctx.save();
+      const glowRadius = bot.radius * 2.4;
+      const trailX = bot.x - bot.dashDirX * bot.radius * 1.8;
+      const trailY = bot.y - bot.dashDirY * bot.radius * 1.8;
+      const dashGlow = ctx.createRadialGradient(trailX, trailY, 0, trailX, trailY, glowRadius);
+      dashGlow.addColorStop(0, 'rgba(255, 255, 255, 0.5)');
+      dashGlow.addColorStop(0.5, bot.dashTrail);
+      dashGlow.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      ctx.beginPath();
+      ctx.arc(trailX, trailY, glowRadius, 0, Math.PI * 2);
+      ctx.fillStyle = dashGlow;
+      ctx.fill();
+      ctx.restore();
+    }
+
+    const botFlashing = bot.hitFlashUntil && performance.now() < bot.hitFlashUntil;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(bot.x, bot.y, bot.radius, 0, Math.PI * 2);
+    ctx.fillStyle = botFlashing ? '#ffffff' : bot.color;
+    ctx.shadowColor = bot.glow;
+    ctx.shadowBlur = bot.dashActive ? bot.radius * 2.2 : bot.radius * 1.4;
+    ctx.fill();
+    // cincin cyan penanda ini musuh (bot), agar tetap bisa dibedakan dari pemain
+    // walau kebetulan memakai hero dengan warna yang sama
+    ctx.lineWidth = Math.max(1.5, bot.radius * 0.16);
+    ctx.strokeStyle = 'rgba(0, 229, 255, 0.9)';
+    ctx.shadowColor = 'rgba(0, 229, 255, 0.85)';
+    ctx.shadowBlur = bot.radius * 0.9;
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.save();
+    const tipX = bot.x + bot.facingX * bot.radius * 1.6;
+    const tipY = bot.y + bot.facingY * bot.radius * 1.6;
+    ctx.beginPath();
+    ctx.moveTo(bot.x, bot.y);
+    ctx.lineTo(tipX, tipY);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)';
+    ctx.lineWidth = Math.max(1, bot.radius * 0.18);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawBotHpBar() {
+    if (!bot.active) return;
+    const barW = bot.radius * 2.6;
+    const barH = Math.max(3, bot.radius * 0.3);
+    const barX = bot.x - barW / 2;
+    const barY = bot.y - bot.radius - barH - Math.max(5, bot.radius * 0.4);
+    const pct = Math.max(0, Math.min(1, bot.hp / bot.maxHp));
+    const barColor = '#ff4d5e';
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+    ctx.fillRect(barX - 1, barY - 1, barW + 2, barH + 2);
+    ctx.strokeStyle = 'rgba(0, 229, 255, 0.5)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(barX - 1, barY - 1, barW + 2, barH + 2);
+
+    ctx.fillStyle = barColor;
+    ctx.shadowColor = 'rgba(255, 77, 94, 0.6)';
+    ctx.shadowBlur = 4;
+    ctx.fillRect(barX, barY, barW * pct, barH);
+    ctx.restore();
+
+    ctx.save();
+    ctx.font = `600 ${Math.max(8, bot.radius * 0.55)}px Segoe UI, Arial, sans-serif`;
+    ctx.fillStyle = barColor;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.shadowColor = 'rgba(255, 77, 94, 0.5)';
+    ctx.shadowBlur = 3;
+    ctx.fillText('BOT ' + Math.round(pct * 100) + '%', bot.x, barY - 2);
+    ctx.restore();
+  }
+
+  // ==========================================================
+  // PELURU
+  // ==========================================================
+  // owner: 'player' atau 'bot' — menentukan target yang bisa terkena peluru ini di mode VS AI
+  // source: entitas penembak ({x, y, radius}) — player atau bot
+  function spawnBullet(owner, source, fx, fy, rangeGridOverride, startOffsetPx, type, damage) {
+    const isArrow = type === 'arrow';
+    const speed = (isArrow ? ARJUNA_ARROW_SPEED_GRID_PER_SEC : BULLET_SPEED_GRID_PER_SEC) * cellSize;
+    const offset = (startOffsetPx || 0) + source.radius;
+    const originX = source.x + fx * source.radius;
+    const originY = source.y + fy * source.radius;
+    const rangeGrid = rangeGridOverride || SHOOT_RANGE_GRID;
+    bullets.push({
+      x: source.x + fx * offset,
+      y: source.y + fy * offset,
+      originX: originX,
+      originY: originY,
+      vx: fx * speed,
+      vy: fy * speed,
+      radius: BULLET_RADIUS_GRID * cellSize,
+      maxRangePx: rangeGrid * cellSize,
+      type: type || 'bullet',
+      owner: owner || 'player',
+      damage: damage || 0
+    });
+  }
+
+  const SKILL2_SHOT_INTERVAL_MS = 90; // jeda antar tembakan skill 2 agar bunyi pistol sinkron dgn peluru keluar
+
+  function spawnSkill2Burst(owner, source, dmgPerBullet) {
+    // tembakan lurus 5 peluru berbaris searah bidikan, dikeluarkan bertahap
+    // agar bunyi pistol ikut berbunyi berulang 5 kali seiringan tiap peluru muncul
+    const dirX = source.facingX;
+    const dirY = source.facingY;
+    const spacingPx = SKILL2_BULLET_SPACING_GRID * cellSize;
+    for (let i = 0; i < SKILL2_BULLET_COUNT; i++) {
+      setTimeout(function () {
+        spawnBullet(owner, source, dirX, dirY, SKILL2_RANGE_GRID, i * spacingPx, 'bullet', dmgPerBullet);
+        if (owner === 'player') playSfx(sfxPistol);
+        else playBotSfx(sfxPistol, source);
+      }, i * SKILL2_SHOT_INTERVAL_MS);
+    }
+  }
+
+  // ==========================================================
+  // SKILL ARJUNA: TEBASAN PEDANG (SKILL 1) & PANAH BUSUR (SKILL 2)
+  // ==========================================================
+  function performSwordSlash(owner, source) {
+    const eff = {
+      x: source.x,
+      y: source.y,
+      dirX: source.facingX,
+      dirY: source.facingY,
+      startTime: performance.now()
+    };
+    if (owner === 'player') {
+      slashEffect = eff;
+      playSfx(sfxSwordArjuna);
+    } else {
+      botSlashEffect = eff;
+      playBotSfx(sfxSwordArjuna, source);
+    }
+
+    // hit-test tebasan (area di sekitar penebas) khusus mode VS AI
+    if (gameMode === 'vsai' && !matchOver) {
+      const target = owner === 'player' ? bot : player;
+      if (owner === 'bot' || bot.active) {
+        const ddx = target.x - source.x;
+        const ddy = target.y - source.y;
+        const dist = Math.hypot(ddx, ddy);
+        if (dist <= ARJUNA_SLASH_RANGE_GRID * cellSize + target.radius) {
+          dealDamage(target, DMG_ARJUNA_SLASH);
+        }
+      }
+    }
+
+    if (owner === 'player') startAutoDashForSlash(); // ngedash sambil menghunus pedang
+    else startBotAutoDashForSlash();
+  }
+
+  function fireArjunaArrow(owner, source) {
+    const rangeGrid = owner === 'player' ? getCurrentRangeGrid() : ARJUNA_BOW_MAX_RANGE_GRID * 0.85;
+    spawnBullet(owner, source, source.facingX, source.facingY, rangeGrid, 0, 'arrow', DMG_ARJUNA_ARROW);
+    if (owner === 'player') playSfx(sfxArrowShotArjuna);
+    else playBotSfx(sfxArrowShotArjuna, source);
+  }
+
+  function drawSlashEffect() {
+    if (!slashEffect) return;
+    const elapsed = performance.now() - slashEffect.startTime;
+    if (elapsed >= ARJUNA_SLASH_EFFECT_DURATION_MS) {
+      slashEffect = null;
+      return;
+    }
+    const t = elapsed / ARJUNA_SLASH_EFFECT_DURATION_MS;
+    const rangePx = ARJUNA_SLASH_RANGE_GRID * cellSize;
+    const baseAngle = Math.atan2(slashEffect.dirY, slashEffect.dirX);
+    const spread = Math.PI * 0.55;
+
+    // efek mengikuti posisi pemain saat ini supaya terlihat menyatu dengan gerakan dash
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(player.x, player.y, rangePx * (0.5 + t * 0.5), baseAngle - spread / 2, baseAngle + spread / 2);
+    ctx.strokeStyle = 'rgba(255, 179, 71, ' + (0.9 * (1 - t)) + ')';
+    ctx.lineWidth = Math.max(2, cellSize * 0.16 * (1 - t * 0.4));
+    ctx.lineCap = 'round';
+    ctx.shadowColor = 'rgba(255, 207, 107, 0.9)';
+    ctx.shadowBlur = cellSize * 0.6;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawBotSlashEffect() {
+    if (!botSlashEffect) return;
+    const elapsed = performance.now() - botSlashEffect.startTime;
+    if (elapsed >= ARJUNA_SLASH_EFFECT_DURATION_MS) {
+      botSlashEffect = null;
+      return;
+    }
+    const t = elapsed / ARJUNA_SLASH_EFFECT_DURATION_MS;
+    const rangePx = ARJUNA_SLASH_RANGE_GRID * cellSize;
+    const baseAngle = Math.atan2(botSlashEffect.dirY, botSlashEffect.dirX);
+    const spread = Math.PI * 0.55;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(bot.x, bot.y, rangePx * (0.5 + t * 0.5), baseAngle - spread / 2, baseAngle + spread / 2);
+    ctx.strokeStyle = 'rgba(255, 179, 71, ' + (0.9 * (1 - t)) + ')';
+    ctx.lineWidth = Math.max(2, cellSize * 0.16 * (1 - t * 0.4));
+    ctx.lineCap = 'round';
+    ctx.shadowColor = 'rgba(255, 207, 107, 0.9)';
+    ctx.shadowBlur = cellSize * 0.6;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function fireCurrentSkill() {
+    if (skillReloading[currentSkill]) return;
+    if (selectedHero === 'arjuna') {
+      const usedSkill = currentSkill;
+      if (usedSkill === 1) {
+        performSwordSlash('player', player);
+      } else {
+        fireArjunaArrow('player', player);
+      }
+      skillReloading[usedSkill] = true;
+      skillReloadStart[usedSkill] = performance.now();
+      if (usedSkill === 2) {
+        // setelah memakai skill 2 (panah busur), otomatis kembali ke skill 1 (tebasan pedang)
+        currentSkill = 1;
+      }
+      return;
+    }
+    if (currentSkill === 1) {
+      spawnBullet('player', player, player.facingX, player.facingY, SHOOT_RANGE_GRID, 0, 'bullet', DMG_RYDER_SKILL1);
+      playSfx(sfxPistol);
+    } else {
+      spawnSkill2Burst('player', player, DMG_RYDER_SKILL2_BULLET);
+    }
+    skillReloading[currentSkill] = true;
+    skillReloadStart[currentSkill] = performance.now();
+    playSfx(sfxReload);
+    if (currentSkill === 2) {
+      // ngedash dulu searah bidikan, baru otomatis ganti ke skill 1 setelah dash selesai
+      startAutoDashForSkill2();
+    }
+  }
+
+  function startAutoDashForSkill2() {
+    let dirX = player.facingX;
+    let dirY = player.facingY;
+    const dist = Math.hypot(dirX, dirY);
+    if (dist < 0.001) {
+      dirX = 0;
+      dirY = -1;
+    } else {
+      dirX /= dist;
+      dirY /= dist;
+    }
+    dashDirX = dirX;
+    dashDirY = dirY;
+    dashActive = true;
+    dashElapsedMs = 0;
+    dashOnCooldown = true;
+    dashCooldownStart = performance.now();
+    pendingSkill2Revert = true;
+    playSfx(sfxDash);
+  }
+
+  // Dash pendek searah bidikan, dipicu bersamaan saat Arjuna menghunus pedang (skill 1)
+  function startAutoDashForSlash() {
+    let dirX = player.facingX;
+    let dirY = player.facingY;
+    const dist = Math.hypot(dirX, dirY);
+    if (dist < 0.001) {
+      dirX = 0;
+      dirY = -1;
+    } else {
+      dirX /= dist;
+      dirY /= dist;
+    }
+    dashDirX = dirX;
+    dashDirY = dirY;
+    dashActive = true;
+    dashElapsedMs = 0;
+    dashOnCooldown = true;
+    dashCooldownStart = performance.now();
+    playSfx(sfxDash);
+  }
+
+  function toggleSkill() {
+    currentSkill = currentSkill === 1 ? 2 : 1;
+  }
+
+  function triggerDash() {
+    if (dashOnCooldown || dashActive) return;
+    let dirX = moveDirX;
+    let dirY = moveDirY;
+    if (dirX === 0 && dirY === 0) {
+      dirX = lastMoveDirX;
+      dirY = lastMoveDirY;
+    }
+    const dist = Math.hypot(dirX, dirY);
+    if (dist < 0.001) return;
+    dashDirX = dirX / dist;
+    dashDirY = dirY / dist;
+    dashActive = true;
+    dashElapsedMs = 0;
+    dashOnCooldown = true;
+    dashCooldownStart = performance.now();
+    playSfx(sfxDash);
+  }
+
+  function updateBullets(dt) {
+    for (let i = bullets.length - 1; i >= 0; i--) {
+      const b = bullets[i];
+      b.x += b.vx * dt;
+      b.y += b.vy * dt;
+
+      const traveledDx = b.x - b.originX;
+      const traveledDy = b.y - b.originY;
+      const traveled = Math.hypot(traveledDx, traveledDy);
+      if (traveled >= b.maxRangePx) {
+        bullets.splice(i, 1);
+        continue;
+      }
+
+      const dx = b.x - arenaCx;
+      const dy = b.y - arenaCy;
+      const norm = (dx * dx) / (arenaRx * arenaRx) + (dy * dy) / (arenaRy * arenaRy);
+      if (norm > 1.05) {
+        bullets.splice(i, 1);
+        continue;
+      }
+
+      // tabrakan peluru/panah dengan target, khusus mode VS AI
+      if (gameMode === 'vsai' && !matchOver) {
+        if (b.owner === 'player' && bot.active) {
+          const bdx = b.x - bot.x, bdy = b.y - bot.y;
+          if (Math.hypot(bdx, bdy) <= b.radius + bot.radius) {
+            dealDamage(bot, b.damage);
+            bullets.splice(i, 1);
+            continue;
+          }
+        } else if (b.owner === 'bot') {
+          const pdx = b.x - player.x, pdy = b.y - player.y;
+          if (Math.hypot(pdx, pdy) <= b.radius + player.radius) {
+            dealDamage(player, b.damage);
+            bullets.splice(i, 1);
+            continue;
+          }
+        }
+      }
+    }
+  }
+
+  // ==========================================================
+  // KERUSAKAN & AKHIR PERTANDINGAN (MODE VS AI)
+  // ==========================================================
+  function dealDamage(target, amount) {
+    if (matchOver || !amount) return;
+    target.hp = Math.max(0, target.hp - amount);
+    target.hitFlashUntil = performance.now() + 140;
+    if (gameMode === 'vsai') {
+      if (target === bot && bot.hp <= 0) {
+        endMatch(true);
+      } else if (target === player && player.hp <= 0) {
+        endMatch(false);
+      }
+    }
+  }
+
+  function endMatch(playerWon) {
+    if (matchOver) return;
+    matchOver = true;
+    bot.active = false;
+    if (footstepPlaying) {
+      sfxFootstep.pause();
+      footstepPlaying = false;
+    }
+    if (botFootstepPlaying) {
+      sfxFootstepBot.pause();
+      botFootstepPlaying = false;
+    }
+    gamePaused = true;
+    matchResultTitle.textContent = playerWon ? 'KAMU MENANG' : 'KAMU KALAH';
+    matchResultSubtitle.textContent = playerWon ? 'Bot berhasil dikalahkan.' : 'Bot berhasil mengalahkanmu.';
+    matchResultScreen.style.display = 'flex';
+    srEnabled = true;
+    srResetFocus((playerWon ? 'Kamu menang! Bot berhasil dikalahkan. ' : 'Kamu kalah. Bot berhasil mengalahkanmu. ') + 'Geser lalu ketuk dua kali tombol kembali ke menu untuk melanjutkan.');
+  }
+
+  // ==========================================================
+  // KECERDASAN BOT (MODE VS AI) — kesulitan "sedang"
+  // ==========================================================
+  function botPreferredRangeGrid() {
+    return bot.hero === 'arjuna' ? 6.5 : 10;
+  }
+
+  function startBotAutoDashForSkill2() {
+    bot.dashDirX = bot.facingX;
+    bot.dashDirY = bot.facingY;
+    bot.dashActive = true;
+    bot.dashElapsedMs = 0;
+    bot.dashOnCooldown = true;
+    bot.dashCooldownStart = performance.now();
+    bot.pendingSkill2Revert = true;
+    playBotSfx(sfxDash, bot);
+  }
+
+  function startBotAutoDashForSlash() {
+    bot.dashDirX = bot.facingX;
+    bot.dashDirY = bot.facingY;
+    bot.dashActive = true;
+    bot.dashElapsedMs = 0;
+    bot.dashOnCooldown = true;
+    bot.dashCooldownStart = performance.now();
+    playBotSfx(sfxDash, bot);
+  }
+
+  function botFireSkill(skillNum) {
+    bot.currentSkill = skillNum;
+    if (bot.hero === 'arjuna') {
+      if (skillNum === 1) {
+        performSwordSlash('bot', bot);
+      } else {
+        fireArjunaArrow('bot', bot);
+      }
+    } else {
+      if (skillNum === 1) {
+        spawnBullet('bot', bot, bot.facingX, bot.facingY, SHOOT_RANGE_GRID, 0, 'bullet', DMG_RYDER_SKILL1);
+        playBotSfx(sfxPistol, bot);
+      } else {
+        spawnSkill2Burst('bot', bot, DMG_RYDER_SKILL2_BULLET);
+      }
+    }
+    bot.skillReloading[skillNum] = true;
+    bot.skillReloadStart[skillNum] = performance.now();
+    if (bot.hero === 'arjuna' && skillNum === 2) {
+      bot.currentSkill = 1; // otomatis kembali ke skill 1 setelah memakai panah, sama seperti pemain
+    }
+    if (bot.hero === 'ryder' && skillNum === 2) {
+      startBotAutoDashForSkill2();
+    }
+  }
+
+  function attemptBotAttack(distGrid) {
+    if (matchOver) return;
+    if (bot.hero === 'arjuna') {
+      if (!bot.skillReloading[1] && distGrid <= ARJUNA_SLASH_RANGE_GRID * 0.9 && Math.random() < BOT_ATTACK_CHANCE) {
+        botFireSkill(1);
+      } else if (!bot.skillReloading[2] && distGrid > 6 && distGrid <= ARJUNA_BOW_BASE_RANGE_GRID && Math.random() < BOT_ATTACK_CHANCE * 0.7) {
+        botFireSkill(2);
+      }
+    } else {
+      if (!bot.skillReloading[1] && distGrid <= SHOOT_RANGE_GRID && Math.random() < BOT_ATTACK_CHANCE) {
+        botFireSkill(1);
+      } else if (!bot.skillReloading[2] && distGrid > 5 && distGrid <= SKILL2_RANGE_GRID && Math.random() < BOT_ATTACK_CHANCE * 0.5) {
+        botFireSkill(2);
+      }
+    }
+  }
+
+  function botDecide(now) {
+    const dx = player.x - bot.x;
+    const dy = player.y - bot.y;
+    const distPx = Math.hypot(dx, dy);
+    const distGrid = distPx / cellSize;
+    let ndx = dx, ndy = dy;
+    const nd = Math.hypot(ndx, ndy) || 1;
+    ndx /= nd; ndy /= nd;
+
+    // bidikan dengan sedikit ketidakakuratan (bot tidak selalu presisi)
+    const jitter = (Math.random() * 2 - 1) * BOT_AIM_JITTER_RAD;
+    const baseAngle = Math.atan2(ndy, ndx);
+    const aimAngle = baseAngle + jitter;
+    bot.facingX = Math.cos(aimAngle);
+    bot.facingY = Math.sin(aimAngle);
+
+    const preferred = botPreferredRangeGrid();
+    let moveX = 0, moveY = 0;
+    if (distGrid > preferred * 1.15) {
+      moveX = ndx; moveY = ndy; // mendekat
+    } else if (distGrid < preferred * 0.7) {
+      moveX = -ndx; moveY = -ndy; // menjauh
+    } else {
+      const perpX = -ndy, perpY = ndx;
+      moveX = perpX * bot.strafeDir; moveY = perpY * bot.strafeDir; // menyamping
+    }
+    moveX += (Math.random() * 2 - 1) * 0.15;
+    moveY += (Math.random() * 2 - 1) * 0.15;
+    const mLen = Math.hypot(moveX, moveY) || 1;
+    bot.moveDirX = moveX / mLen;
+    bot.moveDirY = moveY / mLen;
+
+    if (now >= bot.nextStrafeFlipAt) {
+      bot.strafeDir *= -1;
+      bot.nextStrafeFlipAt = now + 1500 + Math.random() * 1500;
+    }
+
+    attemptBotAttack(distGrid);
+
+    bot.nextDecisionAt = now + BOT_DECISION_INTERVAL_MIN_MS + Math.random() * (BOT_DECISION_INTERVAL_MAX_MS - BOT_DECISION_INTERVAL_MIN_MS);
+  }
+
+  function updateBot(dt) {
+    updateBotFootstepAudio();
+    if (!bot.active || matchOver) return;
+    const now = performance.now();
+
+    if (bot.dashActive) {
+      const dashSpeedPx = DASH_SPEED_GRID_PER_SEC * cellSize;
+      bot.x += bot.dashDirX * dashSpeedPx * dt;
+      bot.y += bot.dashDirY * dashSpeedPx * dt;
+      clampEntityToArena(bot);
+      bot.dashElapsedMs += dt * 1000;
+      if (bot.dashElapsedMs >= DASH_DURATION_MS) {
+        bot.dashActive = false;
+        if (bot.pendingSkill2Revert) {
+          bot.currentSkill = 1;
+          bot.pendingSkill2Revert = false;
+        }
+      }
+    } else {
+      const speed = PLAYER_SPEED_GRID_PER_SEC * BOT_SPEED_FACTOR * cellSize;
+      bot.x += bot.moveDirX * speed * dt;
+      bot.y += bot.moveDirY * speed * dt;
+      clampEntityToArena(bot);
+    }
+
+    if (bot.dashOnCooldown && now - bot.dashCooldownStart >= DASH_COOLDOWN_MS) {
+      bot.dashOnCooldown = false;
+    }
+    if (bot.skillReloading[1] && now - bot.skillReloadStart[1] >= bot.skillReloadMs[1]) {
+      bot.skillReloading[1] = false;
+    }
+    if (bot.skillReloading[2] && now - bot.skillReloadStart[2] >= bot.skillReloadMs[2]) {
+      bot.skillReloading[2] = false;
+    }
+
+    if (now >= bot.nextDecisionAt) {
+      botDecide(now);
+    }
+  }
+
+  const ARROW_COLOR = '#ffcf6b';
+  const ARROW_GLOW_COLOR = 'rgba(255, 207, 107, 0.9)';
+
+  function drawBullets() {
+    for (const b of bullets) {
+      if (b.type === 'arrow') {
+        // panah digambar sebagai garis pendek searah lajunya, bukan lingkaran
+        const speed = Math.hypot(b.vx, b.vy) || 1;
+        const dx = b.vx / speed;
+        const dy = b.vy / speed;
+        const len = b.radius * 5;
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(b.x - dx * len * 0.5, b.y - dy * len * 0.5);
+        ctx.lineTo(b.x + dx * len * 0.5, b.y + dy * len * 0.5);
+        ctx.strokeStyle = ARROW_COLOR;
+        ctx.lineWidth = Math.max(1.5, b.radius * 1.2);
+        ctx.lineCap = 'round';
+        ctx.shadowColor = ARROW_GLOW_COLOR;
+        ctx.shadowBlur = b.radius * 2.4;
+        ctx.stroke();
+        ctx.restore();
+        continue;
+      }
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+      ctx.fillStyle = BULLET_COLOR;
+      ctx.shadowColor = BULLET_GLOW_COLOR;
+      ctx.shadowBlur = b.radius * 2;
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  // ==========================================================
+  // KONTROL SENTUH: LAYAR BAWAH = GERAK (2 JARI, ANALOG)
+  //                  LAYAR ATAS  = TEMBAK (1 JARI, ARAH BIDIK)
+  // ==========================================================
+  const moveTouches = new Map(); // id -> {x, y}
+  let moveActive = false;
+  let joyBaseX = 0, joyBaseY = 0;
+  let joyStickX = 0, joyStickY = 0;
+  const JOY_MAX_RADIUS = 55;
+  let moveDirX = 0, moveDirY = 0, moveMag = 0;
+
+  let aimTouchId = null;
+  let aiming = false;
+  let aimX = 0, aimY = 0;
+  const topTouches = new Map(); // id -> {x, y, startTime} — untuk deteksi tap 2 jari (ganti skill)
+  let skillSwitchTriggered = false;
+
+  function getTouchPos(touch) {
+    const rect = gameContainer.getBoundingClientRect();
+    return { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
+  }
+
+  function updateJoystickFromTouches() {
+    if (moveTouches.size === 0) return;
+    let sumX = 0, sumY = 0;
+    moveTouches.forEach(p => { sumX += p.x; sumY += p.y; });
+    joyStickX = sumX / moveTouches.size;
+    joyStickY = sumY / moveTouches.size;
+
+    let dx = joyStickX - joyBaseX;
+    let dy = joyStickY - joyBaseY;
+    const dist = Math.hypot(dx, dy);
+    if (dist > JOY_MAX_RADIUS) {
+      dx = (dx / dist) * JOY_MAX_RADIUS;
+      dy = (dy / dist) * JOY_MAX_RADIUS;
+    }
+    const clampedDist = Math.hypot(dx, dy);
+    moveMag = Math.min(1, clampedDist / JOY_MAX_RADIUS);
+    if (clampedDist > 2) {
+      moveDirX = dx / clampedDist;
+      moveDirY = dy / clampedDist;
+    } else {
+      moveDirX = 0;
+      moveDirY = 0;
+      moveMag = 0;
+    }
+  }
+
+  function handleTouchStart(e) {
+    for (const touch of e.changedTouches) {
+      const pos = getTouchPos(touch);
+      if (pos.y >= screenMidY) {
+        // zona gerak (bawah) — kini aktif dengan 1 jari
+        moveTouches.set(touch.identifier, pos);
+        if (moveTouches.size === 1) {
+          // jari pertama menyentuh -> aktifkan analog langsung di titik sentuh
+          joyBaseX = pos.x;
+          joyBaseY = pos.y;
+          joyStickX = pos.x;
+          joyStickY = pos.y;
+          moveActive = true;
+
+          // deteksi tap ganda (dua kali sentuh cepat) -> pemicu dash
+          const nowTap = performance.now();
+          if (nowTap - lastBottomTapEndTime <= DOUBLE_TAP_WINDOW_MS) {
+            triggerDash();
+          }
+        }
+      } else {
+        // zona tembak (atas) — tahan jari untuk mengarahkan laser
+        const pos2 = pos;
+        topTouches.set(touch.identifier, { x: pos2.x, y: pos2.y, startTime: performance.now() });
+
+        if (aimTouchId === null) {
+          aimTouchId = touch.identifier;
+          aiming = true;
+          aimX = pos.x;
+          aimY = pos.y;
+          updateFacingFromAim();
+          if (selectedHero === 'arjuna' && currentSkill === 2) {
+            if (!skillReloading[2]) {
+              aimHoldStartTime = performance.now(); // mulai menarik busur secara sah
+              playSfx(sfxBowDrawArjuna);
+            } else {
+              aimHoldStartTime = null; // masih cooldown, belum boleh menarik busur
+            }
+          } else {
+            aimHoldStartTime = performance.now();
+          }
+        }
+
+        if (topTouches.size === 2 && !skillSwitchTriggered) {
+          // dua jari terdeteksi bersamaan di layar atas -> ganti skill, batalkan tembakan sesi ini
+          toggleSkill();
+          skillSwitchTriggered = true;
+          aiming = false;
+        }
+      }
+    }
+    e.preventDefault();
+  }
+
+  function handleTouchMove(e) {
+    for (const touch of e.changedTouches) {
+      const pos = getTouchPos(touch);
+      if (moveTouches.has(touch.identifier)) {
+        moveTouches.set(touch.identifier, pos);
+        if (moveActive) updateJoystickFromTouches();
+      } else if (touch.identifier === aimTouchId) {
+        aimX = pos.x;
+        aimY = pos.y;
+        if (topTouches.size <= 1) {
+          updateFacingFromAim();
+        }
+      }
+    }
+    e.preventDefault();
+  }
+
+  function handleTouchEnd(e) {
+    for (const touch of e.changedTouches) {
+      if (moveTouches.has(touch.identifier)) {
+        moveTouches.delete(touch.identifier);
+        if (moveTouches.size === 0) {
+          moveActive = false;
+          moveDirX = 0;
+          moveDirY = 0;
+          moveMag = 0;
+          lastBottomTapEndTime = performance.now();
+        }
+      }
+      if (topTouches.has(touch.identifier)) {
+        topTouches.delete(touch.identifier);
+      }
+      if (touch.identifier === aimTouchId) {
+        // lepas jari -> tembak sesuai skill aktif & arah laser terakhir (jika bukan gestur ganti skill)
+        if (!skillSwitchTriggered) {
+          fireCurrentSkill();
+        }
+        aimTouchId = null;
+        aiming = false;
+      }
+      if (topTouches.size === 0) {
+        skillSwitchTriggered = false;
+      }
+    }
+    e.preventDefault();
+  }
+
+  function updateFacingFromAim() {
+    // pemain selalu berada di titik tengah layar karena kamera zoom mengikuti pemain,
+    // jadi arah bidik dihitung dari pusat layar ke titik sentuhan
+    const dx = aimX - viewW / 2;
+    const dy = aimY - viewH / 2;
+    const dist = Math.hypot(dx, dy);
+    if (dist > 0.001) {
+      player.facingX = dx / dist;
+      player.facingY = dy / dist;
+    }
+  }
+
+  gameContainer.addEventListener('touchstart', handleTouchStart, { passive: false });
+  gameContainer.addEventListener('touchmove', handleTouchMove, { passive: false });
+  gameContainer.addEventListener('touchend', handleTouchEnd, { passive: false });
+  gameContainer.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+
+  // ==========================================================
+  // GAMBAR JOYSTICK ANALOG (overlay di layar bawah)
+  // ==========================================================
+  function drawJoystick() {
+    if (!moveActive) return;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(joyBaseX, joyBaseY, JOY_MAX_RADIUS, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(176, 38, 255, 0.5)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(176, 38, 255, 0.08)';
+    ctx.fill();
+    ctx.restore();
+
+    let dx = joyStickX - joyBaseX;
+    let dy = joyStickY - joyBaseY;
+    const dist = Math.hypot(dx, dy);
+    if (dist > JOY_MAX_RADIUS) {
+      dx = (dx / dist) * JOY_MAX_RADIUS;
+      dy = (dy / dist) * JOY_MAX_RADIUS;
+    }
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(joyBaseX + dx, joyBaseY + dy, JOY_MAX_RADIUS * 0.45, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(224, 179, 255, 0.85)';
+    ctx.shadowColor = 'rgba(176, 38, 255, 0.8)';
+    ctx.shadowBlur = 14;
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawAimLine() {
+    if (!aiming) return;
+    const rangePx = getCurrentRangeGrid() * cellSize;
+    const tipX = player.x + player.facingX * rangePx;
+    const tipY = player.y + player.facingY * rangePx;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(player.x, player.y);
+    ctx.lineTo(tipX, tipY);
+    ctx.strokeStyle = '#e0b3ff';
+    ctx.lineWidth = Math.max(1.5, cellSize * 0.06);
+    ctx.shadowColor = 'rgba(224, 179, 255, 0.95)';
+    ctx.shadowBlur = cellSize * 0.5;
+    ctx.stroke();
+    ctx.restore();
+
+    // titik penanda ujung laser
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(tipX, tipY, Math.max(2, cellSize * 0.12), 0, Math.PI * 2);
+    ctx.fillStyle = '#e0b3ff';
+    ctx.shadowColor = 'rgba(224, 179, 255, 0.9)';
+    ctx.shadowBlur = cellSize * 0.6;
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // ==========================================================
+  // BAR RELOAD SENJATA (LINGKARAN, RUANG LAYAR, LAYAR ATAS)
+  // ==========================================================
+  function drawReloadBar() {
+    if (!skillReloading[currentSkill]) return;
+
+    const elapsed = performance.now() - skillReloadStart[currentSkill];
+    const progress = Math.min(1, elapsed / SKILL_RELOAD_MS[currentSkill]);
+
+    const cx = viewW / 2;
+    const cy = viewH * 0.16;
+    const radius = Math.max(20, Math.min(34, viewW * 0.07));
+
+    ctx.save();
+    // lingkaran latar
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(176, 38, 255, 0.2)';
+    ctx.lineWidth = 5;
+    ctx.stroke();
+
+    // lingkaran progres reload
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, -Math.PI / 2, -Math.PI / 2 + progress * Math.PI * 2);
+    ctx.strokeStyle = '#e0b3ff';
+    ctx.lineWidth = 5;
+    ctx.lineCap = 'round';
+    ctx.shadowColor = 'rgba(224, 179, 255, 0.85)';
+    ctx.shadowBlur = 10;
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(224, 179, 255, 0.85)';
+    ctx.font = '600 11px Segoe UI, Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(currentSkill === 1 ? 'RELOAD' : 'RELOAD S2', cx, cy);
+    ctx.restore();
+  }
+
+  // ==========================================================
+  // INDIKATOR SKILL AKTIF (RUANG LAYAR, DEKAT BAR RELOAD)
+  // ==========================================================
+  function drawSkillIndicator() {
+    const cx = viewW / 2;
+    const cy = viewH * 0.16;
+    const radius = Math.max(20, Math.min(34, viewW * 0.07));
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(224, 179, 255, 0.7)';
+    ctx.font = '600 11px Segoe UI, Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(currentSkill === 1 ? 'SKILL 1' : 'SKILL 2', cx, cy + radius + 16);
+    ctx.restore();
+  }
+
+
+  // ==========================================================
+  // UPDATE PEMAIN
+  // ==========================================================
+  function updatePlayer(dt) {
+    if (dashActive) {
+      const dashSpeedPx = DASH_SPEED_GRID_PER_SEC * cellSize;
+      player.x += dashDirX * dashSpeedPx * dt;
+      player.y += dashDirY * dashSpeedPx * dt;
+      clampPlayerToArena();
+      dashElapsedMs += dt * 1000;
+      if (dashElapsedMs >= DASH_DURATION_MS) {
+        dashActive = false;
+        if (pendingSkill2Revert) {
+          currentSkill = 1; // dash selesai -> baru otomatis ganti ke skill 1
+          pendingSkill2Revert = false;
+        }
+      }
+    } else if (moveActive && moveMag > 0) {
+      const speed = PLAYER_SPEED_GRID_PER_SEC * cellSize * moveMag;
+      player.x += moveDirX * speed * dt;
+      player.y += moveDirY * speed * dt;
+      clampPlayerToArena();
+      lastMoveDirX = moveDirX;
+      lastMoveDirY = moveDirY;
+    }
+    if (dashOnCooldown && performance.now() - dashCooldownStart >= DASH_COOLDOWN_MS) {
+      dashOnCooldown = false;
+    }
+    updateFootstepAudio();
+    if (aiming) {
+      updateFacingFromAim();
+    }
+    const now = performance.now();
+    if (skillReloading[1] && now - skillReloadStart[1] >= SKILL_RELOAD_MS[1]) {
+      skillReloading[1] = false;
+    }
+    if (skillReloading[2] && now - skillReloadStart[2] >= SKILL_RELOAD_MS[2]) {
+      skillReloading[2] = false;
+      // jika pemain masih menahan jari saat cooldown skill 2 baru saja selesai,
+      // mulai hitung tarikan busur dari sekarang (bukan dari awal jari ditahan) —
+      // supaya panah tidak langsung penuh terisi begitu cooldown habis.
+      if (selectedHero === 'arjuna' && currentSkill === 2 && aiming) {
+        aimHoldStartTime = now;
+        playSfx(sfxBowDrawArjuna);
+      }
+    }
+  }
+
+  // ==========================================================
+  // GAME LOOP
+  // ==========================================================
+  let lastTime = performance.now();
+  function loop(now) {
+    if (gamePaused) {
+      lastTime = now;
+      requestAnimationFrame(loop);
+      return;
+    }
+
+    const dt = Math.min(0.05, (now - lastTime) / 1000);
+    lastTime = now;
+
+    updatePlayer(dt);
+    if (gameMode === 'vsai') updateBot(dt);
+    updateBullets(dt);
+
+    // bersihkan seluruh layar (ruang layar, sebelum transform kamera)
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, viewW, viewH);
+
+    // --- kamera zoom, selalu berfokus tepat di tengah pemain ---
+    ctx.save();
+    ctx.translate(viewW / 2, viewH / 2);
+    ctx.scale(CAMERA_ZOOM, CAMERA_ZOOM);
+    ctx.translate(-player.x, -player.y);
+
+    drawArena();
+    drawShootRange();
+    drawBullets();
+    if (gameMode === 'vsai') {
+      drawBot();
+      drawBotSlashEffect();
+      drawBotHpBar();
+    }
+    drawPlayer();
+    drawSlashEffect();
+    drawPlayerHpBar();
+    drawAimLine();
+
+    ctx.restore();
+    // --- akhir ruang dunia; sisanya digambar di ruang layar ---
+
+    drawJoystick();
+    drawMinimap();
+    drawReloadBar();
+    drawSkillIndicator();
+
+    requestAnimationFrame(loop);
+  }
+
+  window.addEventListener('resize', resizeCanvas);
+  window.addEventListener('orientationchange', resizeCanvas);
+
+  // ==========================================================
+  // MENU BERTINGKAT (Utama -> Pilih Mode -> Pelatihan Hero / Pengaturan)
+  // ==========================================================
+  const startMenu = document.getElementById('startMenu');
+  const modeMenu = document.getElementById('modeMenu');
+  const heroTrainingScreen = document.getElementById('heroTrainingScreen');
+  const settingsPanel = document.getElementById('settingsPanel');
+  const btnMain = document.getElementById('btnMain');
+  const btnSettings = document.getElementById('btnSettings');
+  const btnSettingsBack = document.getElementById('btnSettingsBack');
+  const btnMultiplayer = document.getElementById('btnMultiplayer');
+  const btnVsAi = document.getElementById('btnVsAi');
+  const btnTraining = document.getElementById('btnTraining');
+  const btnModeBack = document.getElementById('btnModeBack');
+  const heroSelectTitle = document.getElementById('heroSelectTitle');
+  const heroSelectSubtitle = document.getElementById('heroSelectSubtitle');
+  const heroRyderCard = document.getElementById('heroRyderCard');
+  const btnStartTraining = document.getElementById('btnStartTraining');
+  const heroArjunaCard = document.getElementById('heroArjunaCard');
+  const btnStartTrainingArjuna = document.getElementById('btnStartTrainingArjuna');
+  const btnTrainingBack = document.getElementById('btnTrainingBack');
+  const matchResultScreen = document.getElementById('matchResultScreen');
+  const matchResultTitle = document.getElementById('matchResultTitle');
+  const matchResultSubtitle = document.getElementById('matchResultSubtitle');
+  const btnMatchResultBack = document.getElementById('btnMatchResultBack');
+  const volFootstep = document.getElementById('volFootstep');
+  const volPistol = document.getElementById('volPistol');
+  const volReload = document.getElementById('volReload');
+  const volDash = document.getElementById('volDash');
+  const btnRateDown = document.getElementById('btnRateDown');
+  const btnRateUp = document.getElementById('btnRateUp');
+  const srRateValueEl = document.getElementById('srRateValue');
+  const hud = document.getElementById('hud');
+
+  const pauseMenu = document.getElementById('pauseMenu');
+  const pauseGestureZone = document.getElementById('pauseGestureZone');
+  const btnResumeGame = document.getElementById('btnResumeGame');
+  const btnPauseSettings = document.getElementById('btnPauseSettings');
+  const btnPauseExit = document.getElementById('btnPauseExit');
+
+  let gameStarted = false;
+  let gamePaused = false;
+  let gameMode = 'multiplayer'; // 'multiplayer', 'training', atau 'vsai'
+  let settingsOpenedFromPause = false;
+  let heroSelectMode = 'training'; // menentukan tujuan layar pilih hero: 'training' atau 'vsai'
+
+  function showScreen(el, introText) {
+    [startMenu, modeMenu, heroTrainingScreen, settingsPanel, matchResultScreen].forEach(function (s) {
+      s.style.display = 'none';
+    });
+    el.style.display = 'flex';
+    srResetFocus(introText);
+  }
+
+  // Menyiapkan posisi awal & status bot untuk pertandingan VS AI, hero bot dipilih acak
+  function setupVsAiMatch() {
+    bot.hero = Math.random() < 0.5 ? 'ryder' : 'arjuna';
+    applyBotVisuals();
+    bot.hp = bot.maxHp;
+    bot.currentSkill = 1;
+    bot.skillReloading[1] = false;
+    bot.skillReloading[2] = false;
+    bot.pendingSkill2Revert = false;
+    bot.dashActive = false;
+    bot.dashOnCooldown = false;
+    bot.radius = player.radius;
+    bot.hitFlashUntil = 0;
+    bot.strafeDir = Math.random() < 0.5 ? 1 : -1;
+    const now = performance.now();
+    bot.nextDecisionAt = now + 300;
+    bot.nextStrafeFlipAt = now + 1500 + Math.random() * 1500;
+    bot.active = true;
+    botSlashEffect = null;
+
+    const offsetY = innerRy * 0.55;
+    player.x = arenaCx;
+    player.y = arenaCy - offsetY;
+    player.facingX = 0;
+    player.facingY = 1;
+    bot.x = arenaCx;
+    bot.y = arenaCy + offsetY;
+    bot.facingX = 0;
+    bot.facingY = -1;
+    clampPlayerToArena();
+    clampEntityToArena(bot);
+  }
+
+  function startGame(mode, hero) {
+    if (gameStarted) return;
+    gameStarted = true;
+    gameMode = mode || 'multiplayer';
+    selectedHero = hero || 'ryder';
+    applyHeroVisuals();
+    matchOver = false;
+    [startMenu, modeMenu, heroTrainingScreen, settingsPanel, matchResultScreen].forEach(function (s) {
+      s.style.display = 'none';
+    });
+    gameContainer.style.display = 'block';
+
+    resizeCanvas();
+
+    if (gameMode === 'vsai') {
+      setupVsAiMatch();
+    } else {
+      bot.active = false;
+      player.x = arenaCx;
+      player.y = arenaCy;
+      clampPlayerToArena();
+    }
+
+    const heroLabel = selectedHero === 'arjuna' ? 'ARJUNA' : 'RYDER';
+    const botHeroLabel = bot.hero === 'arjuna' ? 'ARJUNA' : 'RYDER';
+    const hudSubtitle = hud.querySelector('.subtitle');
+    if (hudSubtitle) {
+      if (gameMode === 'training') hudSubtitle.textContent = 'PELATIHAN HERO — ' + heroLabel;
+      else if (gameMode === 'vsai') hudSubtitle.textContent = 'VS AI — ' + heroLabel + ' LAWAN BOT ' + botHeroLabel;
+      else hudSubtitle.textContent = 'ARENA 1 VS 1 — MULTIPLAYER';
+    }
+    labelTop.textContent = selectedHero === 'arjuna' ? 'Usap = Tebas · Tahan = Tarik Busur' : 'Tahan & Lepas Untuk Tembak';
+
+    // Matikan navigasi geser & tap 2x sistem screen reader begitu masuk permainan
+    srEnabled = false;
+    srClearFocus();
+    const controlIntroArjuna = 'Navigasi geser dan ketuk dua kali dinonaktifkan. Gunakan satu jari untuk bergerak. Skill 1: usap layar atas ke arah tebasan lalu lepas jari untuk menebas pedang. Tap dua jari di layar atas untuk beralih ke skill 2: tahan jari untuk menarik busur, lepas untuk menembak panah. Ketuk dua kali di layar bawah untuk dash.';
+    const controlIntroRyder = 'Navigasi geser dan ketuk dua kali dinonaktifkan. Gunakan satu jari untuk bergerak, tahan lalu lepas layar bagian atas untuk menembak, ketuk dua kali di layar bawah untuk dash.';
+    const controlIntro = selectedHero === 'arjuna' ? controlIntroArjuna : controlIntroRyder;
+    let introText;
+    if (gameMode === 'vsai') {
+      introText = 'Pertarungan VS AI dimulai. Bot memakai hero ' + (bot.hero === 'arjuna' ? 'Arjuna' : 'Ryder') + '. Dengarkan langkah kaki dan suara bot untuk mengetahui posisinya, suara akan terdengar lebih pelan dan teredam saat bot berada di belakangmu. ' + controlIntro;
+    } else if (gameMode === 'training') {
+      introText = 'Pelatihan dimulai bersama ' + heroLabel + '. ' + controlIntro;
+    } else {
+      introText = 'Permainan dimulai. ' + controlIntro;
+    }
+    srSpeak(introText);
+
+    requestAnimationFrame(loop);
+  }
+
+  btnMain.addEventListener('click', function () {
+    showScreen(modeMenu, 'Pilih mode permainan. Geser kanan atau kiri untuk memilih, ketuk dua kali untuk membuka.');
+  });
+
+  btnSettings.addEventListener('click', function () {
+    settingsOpenedFromPause = false;
+    pauseMenu.style.display = 'none';
+    showScreen(settingsPanel, 'Pengaturan volume dan kecepatan bicara screen reader. Geser layar untuk berpindah antar slider, tombol kurang tambah kecepatan bicara, atau tombol kembali. Slider dapat digeser langsung untuk mengubah nilai.');
+  });
+  btnSettingsBack.addEventListener('click', function () {
+    if (settingsOpenedFromPause) {
+      settingsPanel.style.display = 'none';
+      pauseMenu.style.display = 'flex';
+      srResetFocus('Menu jeda. Geser kanan atau kiri untuk memilih Lanjut Main, Pengaturan, atau Kembali. Ketuk dua kali di layar untuk memilih.');
+    } else {
+      showScreen(startMenu, 'Menu utama. Geser kanan atau kiri untuk memilih Main atau Pengaturan.');
+    }
+  });
+
+  btnMultiplayer.addEventListener('click', function () {
+    srSpeak('Mode Multiplayer belum tersedia. Saat ini hanya Pelatihan Hero dan VS AI yang bisa dimainkan.');
+  });
+
+  // Membuka layar pilih hero, dipakai bersama oleh Pelatihan Hero dan VS AI
+  const heroRyderCardBaseLabel = heroRyderCard.getAttribute('aria-label').replace(/Ketuk dua kali.*$/, '').trim();
+  const heroArjunaCardBaseLabel = heroArjunaCard.getAttribute('aria-label').replace(/Ketuk dua kali.*$/, '').trim();
+
+  function openHeroSelectScreen(mode) {
+    heroSelectMode = mode;
+    if (mode === 'vsai') {
+      heroSelectTitle.textContent = 'VS AI — PILIH HERO';
+      heroSelectSubtitle.textContent = '2 Hero Tersedia';
+      heroRyderCard.setAttribute('aria-label', heroRyderCardBaseLabel + ' Ketuk dua kali untuk memilih dan mulai bertarung melawan bot.');
+      heroArjunaCard.setAttribute('aria-label', heroArjunaCardBaseLabel + ' Ketuk dua kali untuk memilih dan mulai bertarung melawan bot.');
+      btnStartTraining.setAttribute('aria-label', 'Main dengan Ryder, mulai bertarung melawan bot');
+      btnStartTrainingArjuna.setAttribute('aria-label', 'Main dengan Arjuna, mulai bertarung melawan bot');
+      showScreen(heroTrainingScreen, 'VS AI. Pilih hero untuk bertarung melawan bot komputer. Dua hero tersedia, Ryder dan Arjuna. Geser untuk mendengar spesifikasinya, lalu ketuk dua kali tombol main dengan hero pilihan untuk memulai pertarungan melawan bot.');
+    } else {
+      heroSelectTitle.textContent = 'PELATIHAN HERO';
+      heroSelectSubtitle.textContent = '2 Hero Tersedia';
+      heroRyderCard.setAttribute('aria-label', heroRyderCardBaseLabel + ' Ketuk dua kali untuk memilih dan mulai latihan.');
+      heroArjunaCard.setAttribute('aria-label', heroArjunaCardBaseLabel + ' Ketuk dua kali untuk memilih dan mulai latihan.');
+      btnStartTraining.setAttribute('aria-label', 'Main dengan Ryder, mulai latihan');
+      btnStartTrainingArjuna.setAttribute('aria-label', 'Main dengan Arjuna, mulai latihan');
+      showScreen(heroTrainingScreen, 'Pelatihan hero. Dua hero tersedia, Ryder dan Arjuna. Geser untuk mendengar spesifikasinya, lalu ketuk dua kali tombol main dengan hero pilihan untuk mulai.');
+    }
+  }
+
+  btnTraining.addEventListener('click', function () {
+    openHeroSelectScreen('training');
+  });
+  btnVsAi.addEventListener('click', function () {
+    openHeroSelectScreen('vsai');
+  });
+  btnModeBack.addEventListener('click', function () {
+    showScreen(startMenu, 'Menu utama. Geser kanan atau kiri untuk memilih Main atau Pengaturan.');
+  });
+
+  heroRyderCard.addEventListener('click', function () {
+    startGame(heroSelectMode, 'ryder');
+  });
+  btnStartTraining.addEventListener('click', function () {
+    startGame(heroSelectMode, 'ryder');
+  });
+  heroArjunaCard.addEventListener('click', function () {
+    startGame(heroSelectMode, 'arjuna');
+  });
+  btnStartTrainingArjuna.addEventListener('click', function () {
+    startGame(heroSelectMode, 'arjuna');
+  });
+  btnTrainingBack.addEventListener('click', function () {
+    showScreen(modeMenu, 'Pilih mode permainan. Geser kanan atau kiri untuk memilih, ketuk dua kali untuk membuka.');
+  });
+  btnMatchResultBack.addEventListener('click', exitToMainMenu);
+
+  // ==========================================================
+  // MENU JEDA (dipicu gestur lingkaran satu jari di tengah layar saat bermain)
+  // ==========================================================
+  function openPauseMenu() {
+    if (!gameStarted || gamePaused) return;
+    gamePaused = true;
+    if (footstepPlaying) {
+      sfxFootstep.pause();
+      footstepPlaying = false;
+    }
+    pauseMenu.style.display = 'flex';
+    srEnabled = true; // aktifkan lagi navigasi geser & tap 2x khusus untuk menu jeda
+    srResetFocus('Permainan dijeda. Menu jeda terbuka. Geser kanan atau kiri untuk memilih Lanjut Main, Pengaturan, atau Kembali. Ketuk dua kali di layar untuk memilih.');
+  }
+
+  function resumeFromPause() {
+    pauseMenu.style.display = 'none';
+    gamePaused = false;
+    srEnabled = false;
+    srClearFocus();
+    srSpeak('Melanjutkan permainan.');
+  }
+
+  function exitToMainMenu() {
+    pauseMenu.style.display = 'none';
+    matchResultScreen.style.display = 'none';
+    gameContainer.style.display = 'none';
+    gamePaused = false;
+    gameStarted = false;
+    resetGameState();
+    srEnabled = true;
+    showScreen(startMenu, 'Kembali ke menu utama. Geser kanan atau kiri untuk memilih Main atau Pengaturan.');
+  }
+
+  btnResumeGame.addEventListener('click', resumeFromPause);
+  btnPauseSettings.addEventListener('click', function () {
+    settingsOpenedFromPause = true;
+    pauseMenu.style.display = 'none';
+    settingsPanel.style.display = 'flex';
+    srResetFocus('Pengaturan volume dan kecepatan bicara screen reader. Geser layar untuk berpindah antar slider, tombol kurang tambah kecepatan bicara, atau tombol kembali. Slider dapat digeser langsung untuk mengubah nilai.');
+  });
+  btnPauseExit.addEventListener('click', exitToMainMenu);
+
+  // Deteksi gestur "geser membentuk lingkaran" satu jari di zona tengah layar
+  let circleActive = false;
+  let circleTouchId = null;
+  let circleCenterX = 0;
+  let circleCenterY = 0;
+  let circleCumulativeAngle = 0;
+  let circleLastAngle = null;
+  const CIRCLE_MIN_RADIUS = 12;
+  const CIRCLE_COMPLETE_ANGLE = Math.PI * 1.7; // ~306 derajat dianggap satu putaran penuh
+
+  function resetCircleGesture() {
+    circleActive = false;
+    circleTouchId = null;
+    circleCumulativeAngle = 0;
+    circleLastAngle = null;
+  }
+
+  pauseGestureZone.addEventListener('touchstart', function (e) {
+    if (!gameStarted || gamePaused) return;
+    e.stopPropagation();
+    e.preventDefault();
+    if (e.touches.length !== 1) {
+      resetCircleGesture();
+      return;
+    }
+    const t = e.touches[0];
+    const rect = pauseGestureZone.getBoundingClientRect();
+    circleCenterX = rect.left + rect.width / 2;
+    circleCenterY = rect.top + rect.height / 2;
+    circleTouchId = t.identifier;
+    circleCumulativeAngle = 0;
+    circleLastAngle = null;
+    circleActive = true;
+  }, { passive: false });
+
+  pauseGestureZone.addEventListener('touchmove', function (e) {
+    if (!gameStarted || gamePaused || !circleActive) return;
+    e.stopPropagation();
+    e.preventDefault();
+    let t = null;
+    for (let i = 0; i < e.touches.length; i++) {
+      if (e.touches[i].identifier === circleTouchId) { t = e.touches[i]; break; }
+    }
+    if (!t) return;
+
+    const dx = t.clientX - circleCenterX;
+    const dy = t.clientY - circleCenterY;
+    const radius = Math.hypot(dx, dy);
+    if (radius < CIRCLE_MIN_RADIUS) return; // terlalu dekat pusat, sudut belum stabil
+
+    const angle = Math.atan2(dy, dx);
+    if (circleLastAngle !== null) {
+      let delta = angle - circleLastAngle;
+      while (delta > Math.PI) delta -= Math.PI * 2;
+      while (delta < -Math.PI) delta += Math.PI * 2;
+      circleCumulativeAngle += delta;
+    }
+    circleLastAngle = angle;
+
+    if (Math.abs(circleCumulativeAngle) >= CIRCLE_COMPLETE_ANGLE) {
+      resetCircleGesture();
+      openPauseMenu();
+    }
+  }, { passive: false });
+
+  pauseGestureZone.addEventListener('touchend', function (e) {
+    e.stopPropagation();
+    resetCircleGesture();
+  }, { passive: false });
+
+  pauseGestureZone.addEventListener('touchcancel', function (e) {
+    e.stopPropagation();
+    resetCircleGesture();
+  }, { passive: false });
+
+  volFootstep.addEventListener('input', function () {
+    sfxFootstep.volume = volFootstep.value / 100;
+  });
+  volPistol.addEventListener('input', function () {
+    sfxPistol.volume = volPistol.value / 100;
+  });
+  volReload.addEventListener('input', function () {
+    sfxReload.volume = volReload.value / 100;
+  });
+  volDash.addEventListener('input', function () {
+    sfxDash.volume = volDash.value / 100;
+  });
+
+  // ==========================================================
+  // SISTEM NAVIGASI SCREEN READER (mirip TalkBack / VoiceOver)
+  // - Geser kanan/kiri  : SATU-SATUNYA cara pindah fokus antar tombol/kartu & diucapkan
+  // - Tap sekali         : tidak melakukan apa-apa (bukan pemicu klik)
+  // - Tap 2 kali cepat   : aktifkan / klik elemen yang sedang fokus, di mana pun posisi tap di layar
+  // - Otomatis nonaktif saat permainan (gameStarted = true)
+  // ==========================================================
+  const srAnnouncer = document.getElementById('srAnnouncer');
+  let srEnabled = true;
+  let srIndex = -1;
+  let srTouchStartX = 0;
+  let srTouchStartY = 0;
+  let srTouchStartTime = 0;
+  let srTouchStartTarget = null;
+  let srLastTapTime = 0;
+  const SR_SWIPE_MIN_DIST = 40;
+  const SR_TAP_MAX_MOVE = 12;
+  const SR_DOUBLE_TAP_WINDOW = 350;
+
+  function srItems() {
+    return Array.prototype.slice.call(document.querySelectorAll('.sr-item')).filter(function (el) {
+      return el.offsetParent !== null;
+    });
+  }
+
+  function srLabelOf(el) {
+    return el.getAttribute('aria-label') || el.textContent.trim();
+  }
+
+  const SR_RATE_MIN = 50;
+  const SR_RATE_MAX = 250;
+  const SR_RATE_STEP = 15;
+  let srRatePercent = 145; // persentase kecepatan bicara screen reader (100% = normal)
+
+  function updateSrRateDisplay() {
+    if (srRateValueEl) srRateValueEl.textContent = srRatePercent + '%';
+    if (btnRateDown) btnRateDown.setAttribute('aria-label', 'Kurangi kecepatan bicara screen reader, saat ini ' + srRatePercent + ' persen');
+    if (btnRateUp) btnRateUp.setAttribute('aria-label', 'Tambah kecepatan bicara screen reader, saat ini ' + srRatePercent + ' persen');
+  }
+
+  function adjustSrRate(step) {
+    const prev = srRatePercent;
+    const next = Math.max(SR_RATE_MIN, Math.min(SR_RATE_MAX, prev + step));
+    srRatePercent = next;
+    updateSrRateDisplay();
+    if (next === prev) {
+      srSpeak(step > 0
+        ? 'Kecepatan bicara sudah maksimum, ' + next + ' persen.'
+        : 'Kecepatan bicara sudah minimum, ' + next + ' persen.');
+    } else {
+      srSpeak((step > 0 ? 'Kecepatan bicara dinaikkan menjadi ' : 'Kecepatan bicara diturunkan menjadi ') + next + ' persen.');
+    }
+  }
+
+  if (btnRateDown) {
+    btnRateDown.addEventListener('click', function () { adjustSrRate(-SR_RATE_STEP); });
+  }
+  if (btnRateUp) {
+    btnRateUp.addEventListener('click', function () { adjustSrRate(SR_RATE_STEP); });
+  }
+  updateSrRateDisplay();
+
+  function srSpeak(text) {
+    if (srAnnouncer) srAnnouncer.textContent = text;
+    if (!('speechSynthesis' in window)) return;
+    try {
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'id-ID';
+      utter.rate = srRatePercent / 100;
+      window.speechSynthesis.speak(utter);
+    } catch (err) { /* abaikan jika speech synthesis tidak tersedia */ }
+  }
+
+  function srClearFocus() {
+    srItems().forEach(function (el) { el.classList.remove('sr-focused'); });
+    srIndex = -1;
+  }
+
+  function srFocusIndex(i) {
+    const items = srItems();
+    if (items.length === 0) return;
+    items.forEach(function (el) { el.classList.remove('sr-focused'); });
+    srIndex = ((i % items.length) + items.length) % items.length;
+    const el = items[srIndex];
+    el.classList.add('sr-focused');
+    srSpeak(srLabelOf(el));
+  }
+
+  function srActivate() {
+    const items = srItems();
+    if (srIndex < 0 || srIndex >= items.length) return;
+    const el = items[srIndex];
+    if (el.tagName === 'INPUT') return; // slider diatur langsung lewat geser, bukan tap 2x
+    el.click();
+  }
+
+  function srResetFocus(introText) {
+    srClearFocus();
+    if (introText) srSpeak(introText);
+  }
+
+  document.addEventListener('touchstart', function (e) {
+    if (!srEnabled) return;
+    if (e.touches.length !== 1) return;
+    const t = e.touches[0];
+    srTouchStartX = t.clientX;
+    srTouchStartY = t.clientY;
+    srTouchStartTime = Date.now();
+    srTouchStartTarget = e.target;
+  }, { passive: true });
+
+  document.addEventListener('touchend', function (e) {
+    if (!srEnabled) return;
+    // Biarkan slider volume ditangani secara normal oleh browser (drag langsung)
+    if (srTouchStartTarget && srTouchStartTarget.closest && srTouchStartTarget.closest('input[type="range"]')) {
+      return;
+    }
+    const t = e.changedTouches[0];
+    const dx = t.clientX - srTouchStartX;
+    const dy = t.clientY - srTouchStartY;
+    const dt = Date.now() - srTouchStartTime;
+    const absDx = Math.abs(dx);
+    const absDy = Math.abs(dy);
+
+    // Geser kanan/kiri untuk berpindah fokus
+    if (absDx > SR_SWIPE_MIN_DIST && absDx > absDy * 1.5 && dt < 600) {
+      e.preventDefault();
+      if (dx > 0) srFocusIndex(srIndex + 1);
+      else srFocusIndex(srIndex - 1);
+      return;
+    }
+
+    // Tap: HANYA tap 2 kali (di mana saja di layar) yang mengaktifkan tombol/kartu
+    // yang sedang fokus. Tap satu kali tidak melakukan apa-apa selain menyimpan
+    // waktunya untuk deteksi tap kedua — fokus hanya berpindah lewat geser.
+    // e.preventDefault() selalu dipanggil di sini supaya tap satu jari TIDAK
+    // memicu klik native pada tombol yang tersentuh.
+    if (absDx < SR_TAP_MAX_MOVE && absDy < SR_TAP_MAX_MOVE) {
+      e.preventDefault();
+      const now = Date.now();
+      const isDoubleTap = (now - srLastTapTime < SR_DOUBLE_TAP_WINDOW);
+
+      if (isDoubleTap) {
+        // tap kedua tidak harus berada di atas tombol yang sedang dipilih —
+        // langsung aktifkan elemen yang sedang fokus (hasil geser sebelumnya)
+        srActivate();
+        srLastTapTime = 0;
+      } else {
+        srLastTapTime = now;
+      }
+    }
+  }, { passive: false });
+
+  // Sambutan awal saat halaman dimuat
+  srResetFocus('Blind Hero Arena. Menu utama. Geser kanan atau kiri untuk memilih Main atau Pengaturan, ketuk dua kali untuk membuka.');
+})();
+</script>
+
+</body>
+</html>
